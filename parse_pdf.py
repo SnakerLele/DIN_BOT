@@ -281,26 +281,30 @@ def load_and_process_pdfs():
     try:
         if pdf_files:
             test_file = os.path.join(PDF_FOLDER, pdf_files[0])
-            # Teste mit auto-Strategie
-            test_docs = reader.load_data(file=test_file, strategy="auto")
+            # Teste mit auto-Strategie über unstructured_kwargs
+            test_docs = reader.load_data(
+                file=test_file, 
+                unstructured_kwargs={
+                    "strategy": "auto",
+                    "include_page_breaks": True,
+                    "combine_text_under_n_chars": 0
+                }
+            )
             if test_docs:
                 print("✓ Lokale UnstructuredReader funktioniert mit 'auto' Strategie!")
                 local_reader_works = True
             else:
                 print("⚠ Lokale UnstructuredReader lieferte keine Dokumente")
-    except TypeError as te:
-        if "unexpected keyword argument 'strategy'" in str(te):
-            print("⚠ Lokale Installation unterstützt 'strategy' Parameter nicht.")
-            print("→ Verwende Standard-UnstructuredReader ohne Strategie-Parameter.")
-            try:
-                test_docs = reader.load_data(file=test_file)
-                if test_docs:
-                    local_reader_works = True
-                    print("✓ Standard UnstructuredReader funktioniert!")
-            except Exception as e2:
-                print(f"❌ Auch Standard-Reader funktioniert nicht: {str(e2)}")
-        else:
-            print(f"❌ TypeError bei lokalem Reader: {str(te)}")
+    except Exception as te:
+        print(f"⚠ Fehler beim Testen mit 'auto' Strategie: {str(te)}")
+        print("→ Verwende Standard-UnstructuredReader ohne Strategie-Parameter.")
+        try:
+            test_docs = reader.load_data(file=test_file)
+            if test_docs:
+                local_reader_works = True
+                print("✓ Standard UnstructuredReader funktioniert!")
+        except Exception as e2:
+            print(f"❌ Auch Standard-Reader funktioniert nicht: {str(e2)}")
     except Exception as e:
         print(f"❌ Fehler beim Testen der lokalen Installation: {str(e)}")
 
@@ -319,13 +323,18 @@ def load_and_process_pdfs():
                 # Priorisiere lokale Installation
                 if local_reader_works and not use_direct_api:
                     # Verwende lokale UnstructuredReader
-                    print(f"Verwende lokale UnstructuredReader")
+                    print(f"Verwende lokale UnstructuredReader mit 'auto' Strategie")
                     try:
                         file_documents = reader.load_data(
                             file=pdf_path,
-                            strategy="auto"  # Automatische Strategiewahl
+                            unstructured_kwargs={
+                                "strategy": "auto",  # Automatische Strategiewahl
+                                "include_page_breaks": True,  # Seitenumbrüche beibehalten
+                                "combine_text_under_n_chars": 0,  # Keine automatische Textkombination
+                                "max_characters": 100000  # Größere Chunks erlauben
+                            }
                         )
-                    except TypeError:
+                    except Exception:
                         # Fallback ohne strategy Parameter
                         print("→ Fallback: Verwende Reader ohne strategy Parameter")
                         file_documents = reader.load_data(file=pdf_path)
@@ -586,4 +595,6 @@ def main():
         print("\nStack Trace:")
         print(traceback.format_exc())
 
+if __name__ == "__main__":
+    main()
  

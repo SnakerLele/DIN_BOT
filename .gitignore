@@ -20,6 +20,8 @@ flash_attention_windows/
 Sicherung 0526/
 debug_logs/
 PDFs/
+pdf/
+rag-tutorial-v2/
 
 # Logs
 *.log

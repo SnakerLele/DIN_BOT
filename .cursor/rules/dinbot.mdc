@@ -1,0 +1,6 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+The user is building a local RAG LLM with an vector databse. The Goal is to get information about PDFs that has been embeddet before. The User is also making the PDF embedding skript. 
