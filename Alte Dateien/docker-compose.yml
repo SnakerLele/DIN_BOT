@@ -1,0 +1,58 @@
+services:
+  # Unstructured API Service hinzufügen
+  unstructured-api:
+    image: quay.io/unstructured-io/unstructured-api:latest
+    container_name: unstructured-api
+    ports:
+      - "8000:8000"
+    environment:
+      - LOG_LEVEL=INFO
+    networks:
+      - app_net
+    deploy:
+      resources:
+        limits:
+          memory: 8G
+          cpus: '4'
+
+  # Bestehender PDF-Parser Service mit GPU-Support
+  pdf-parser:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pdf-parser
+    volumes:
+      - ./Test_PDF:/app/Test_PDF
+      - ./chroma_db_store:/app/chroma_db_store
+    environment:
+      - PYTHONUNBUFFERED=1
+      - UNSTRUCTURED_API_URL=http://unstructured-api:8000/general/v0/general
+      # CUDA_VISIBLE_DEVICES=0 ist gut, um eine spezifische GPU auszuwählen,
+      # aber oft nicht zwingend notwendig, wenn 'deploy.resources.devices.count: 1' verwendet wird.
+      # Du kannst es drin lassen oder testweise entfernen, falls Probleme auftreten.
+      - CUDA_VISIBLE_DEVICES=0
+    networks:
+      - app_net
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    depends_on:
+      - unstructured-api # Lässt pdf-parser warten, bis unstructured-api gestartet ist
+                         # Besser wäre 'condition: service_healthy', wenn unstructured-api einen Healthcheck hätte.
+                         # Für jetzt ist 'service_started' (implizit) oder einfach nur der Name okay.
+    command: > # Viel einfacherer Befehl
+      bash -c "
+        echo 'PDF-Parser: Warte 20 Sekunden, bis die Unstructured API bereit ist...' &&
+        sleep 20 &&
+        echo 'PDF-Parser: Starte parse_pdf.py (CUDA-Check erfolgt im Skript)...' &&
+        python parse_pdf.py
+      "
+    stop_grace_period: 20m
+
+networks:
+  app_net:
+    driver: bridge

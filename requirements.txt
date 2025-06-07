@@ -1,0 +1,18 @@
+# Python-Abhängigkeiten für PDF-Verarbeitung mit unstructured und GPU-Support
+unstructured[pdf]
+llama-index
+llama-index-vector-stores-chroma
+llama-index-embeddings-huggingface
+llama-index-readers-file
+chromadb
+torch
+PyMuPDF
+requests
+psutil
+sentence-transformers
+# GPU-Support-Pakete - nicht nötig, da im PyTorch Image bereits enthalten
+# torch wird vom Basis-Image bereitgestellt
+nvidia-ml-py3>=7.352.0
+accelerate>=0.21.0
+# GUI-Abhängigkeiten
+PyQt6>=6.4.0 

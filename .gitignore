@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+
+# Datenbank
+chroma_db_store/
+
+# Dokumente
+PDFs_Index/
+meine_pdfs/
+Daniels_Daten/
+
+# Ordner
+Bibliotheken/
+chroma_db_store/
+flash_attention_env/
+flash_attention_windows/
+Sicherung 0526/
+debug_logs/
+PDFs/
+
+# Logs
+*.log
+
+# Umgebungsvariablen
+.env 
