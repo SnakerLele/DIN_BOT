@@ -6,6 +6,7 @@ import chromadb
 from llama_index.core import VectorStoreIndex
 from llama_index.core.chat_engine import ContextChatEngine
 from llama_index.core.settings import Settings
+from llama_index.core.postprocessor import MetadataReplacementPostProcessor
 from llama_index.vector_stores.chroma import ChromaVectorStore
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.llms.ollama import Ollama
@@ -58,6 +59,19 @@ def setup_rag_logger():
     
     return rag_logger
 
+# Hilfsfunktion für Sentence-Window Optimierung
+def create_sentence_window_postprocessor():
+    """
+    Erstellt einen MetadataReplacementPostProcessor für optimale Sentence-Window-Nutzung.
+    Ersetzt einzelne Sätze durch ihr Kontext-Fenster während der RAG-Abfrage.
+    
+    Returns:
+        MetadataReplacementPostProcessor: Konfigurierter Postprocessor
+    """
+    return MetadataReplacementPostProcessor(
+        target_metadata_key="window"  # Verwendet das window-Feld aus SentenceWindowNodeParser
+    )
+
 # 3. Initialisierung (wird nur beim Serverstart ausgeführt)
 logger.debug("Starte Initialisierung der API-Komponenten...")
 try:
@@ -66,14 +80,23 @@ try:
     db_client = chromadb.PersistentClient(path="./chroma_db_store")
     
     # Versuche die Collection zu laden oder erstelle sie
-    COLLECTION_NAME = "test_collection"  # Muss mit index_data.py übereinstimmen
+    COLLECTION_NAME = "test_collection"  # Muss mit parse_pdf.py übereinstimmen
     try:
         chroma_collection = db_client.get_collection(COLLECTION_NAME)
         logger.debug(f"Bestehende Collection gefunden: {chroma_collection.count()} Dokumente")
+        logger.debug("✓ Verwende dieselbe Collection wie parse_pdf.py mit 768-dimensionalen Embeddings")
     except Exception as e:
         logger.warning(f"Collection nicht gefunden, erstelle neue: {str(e)}")
-        chroma_collection = db_client.create_collection(COLLECTION_NAME)
-        logger.debug("Neue Collection erstellt")
+        # Erstelle Collection mit expliziter Embedding-Funktion für Kompatibilität
+        from chromadb.utils import embedding_functions
+        sentence_transformer_ef = embedding_functions.SentenceTransformerEmbeddingFunction(
+            model_name="sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
+        )
+        chroma_collection = db_client.create_collection(
+            name=COLLECTION_NAME,
+            embedding_function=sentence_transformer_ef
+        )
+        logger.debug("Neue Collection mit kompatiblen 768-dim Embeddings erstellt")
     
     # Embedding-Modell initialisieren
     logger.debug("Lade Embedding-Modell...")
@@ -102,21 +125,38 @@ try:
     logger.debug("Erstelle Index...")
     index = VectorStoreIndex.from_vector_store(vector_store=vector_store)
     
-    # Erstelle den Context Chat Engine anstelle von query_engine
-    logger.debug("Erstelle Context Chat Engine...")
+    # Erstelle MetadataReplacementPostProcessor für Sentence-Window Optimierung
+    logger.debug("Erstelle MetadataReplacementPostProcessor für Sentence-Window Chunks...")
+    sentence_window_postprocessor = create_sentence_window_postprocessor()
+    logger.debug("✓ MetadataReplacementPostProcessor erstellt")
+    
+    # Erstelle den Context Chat Engine mit Sentence-Window Optimierung
+    logger.debug("Erstelle optimierte Context Chat Engine mit Sentence-Window Support...")
     chat_engine = index.as_chat_engine(
         chat_mode="context",
         memory=None,  # Der Chat-Verlauf wird innerhalb der Session verwaltet
-        system_prompt="""Du bist ein hilfreicher und präziser KI-Assistent. Deine Aufgabe ist es, Fragen professionell und ausschließlich auf Basis der dir als Kontext bereitgestellten Textabschnitte zu beantworten.Wichtige Anweisungen für deine Antworten: 
-        1.  **Strikte Kontextbasierung:** Antworte *nur* mit Informationen, die direkt in den bereitgestellten Textabschnitten enthalten sind. Verwende kein externes Wissen oder eigene Annahmen. 
-        2.  **Präzision und Professionalität:** Formuliere deine Antworten konkret, sachlich und professionell. 
-        3.  **Umgang mit unzureichenden Informationen:** Wenn die bereitgestellten Textabschnitte die Frage nicht oder nicht vollständig beantworten können, gib dies klar an (z.B. Basierend auf den vorliegenden Informationen kann ich diese Frage nicht beantworten. oder Die bereitgestellten Informationen enthalten keine Antwort auf [spezifischer Teil der Frage].). Erfinde keine Antworten. 
-        4.  **Quellenangabe:** Nenne am Ende deiner Antwort *immer* das Quelldokument und die Seitenzahl für jeden relevanten Textabschnitt, aus dem du Informationen entnommen hast, sofern diese Metadaten verfsind. Nutze ein klares Format, z.B.: (Quelle: [Dokumentname], Seite: [Seitenzahl]) . 
-        5.  **Sprache:** Antworte immer auf Deutsch. 
-        
-        Beginne jetzt mit der Beantwortung der Frage.""",
-        similarity_top_k=4
+        node_postprocessors=[sentence_window_postprocessor],  # Sentence-Window Optimierung aktiviert
+        system_prompt="""Du bist ein hilfreicher und präziser KI-Assistent. Deine Aufgabe ist es, Fragen professionell und ausschließlich auf Basis der dir als Kontext bereitgestellten Textabschnitte zu beantworten.
+
+WICHTIGE ANWEISUNGEN für deine Antworten:
+
+1. **Strikte Kontextbasierung:** Antworte *nur* mit Informationen, die direkt in den bereitgestellten Textabschnitten enthalten sind. Verwende kein externes Wissen oder eigene Annahmen.
+
+2. **Präzision und Professionalität:** Formuliere deine Antworten konkret, sachlich und professionell.
+
+3. **Umgang mit unzureichenden Informationen:** Wenn die bereitgestellten Textabschnitte die Frage nicht oder nicht vollständig beantworten können, gib dies klar an (z.B. "Basierend auf den vorliegenden Informationen kann ich diese Frage nicht beantworten." oder "Die bereitgestellten Informationen enthalten keine Antwort auf [spezifischer Teil der Frage]."). Erfinde keine Antworten.
+
+4. **Quellenangabe:** Nenne am Ende deiner Antwort *immer* das Quelldokument und die Seitenzahl für jeden relevanten Textabschnitt, aus dem du Informationen entnommen hast, sofern diese Metadaten verfügbar sind. Nutze ein klares Format, z.B.: (Quelle: [Dokumentname], Seite: [Seitenzahl])
+
+5. **Sprache:** Antworte immer auf Deutsch.
+
+HINWEIS: Du erhältst bereits optimierte Textabschnitte mit erweitertem Kontext durch das Sentence-Window-System. Diese enthalten sowohl den relevanten Satz als auch den umgebenden Kontext für besseres Verständnis.
+
+Beginne jetzt mit der Beantwortung der Frage.""",
+        similarity_top_k=4  # Optimiert für sentence-basierte Chunks
     )
+    
+    logger.debug("✓ Chat Engine mit Sentence-Window Optimierung erstellt")
     
     # Speichere Chat-Verläufe in einem Dictionary
     # Key: Chat-ID, Value: Liste von ChatMessage Objekten
@@ -546,6 +586,11 @@ async def chat_completions(request: ChatRequest):
             source_nodes = llm_response.source_nodes
             unique_source_strings = set()  # Um doppelte Quellenangaben zu vermeiden
 
+            rag_logger.info(f"\n--- SENTENCE-WINDOW POSTPROCESSOR ANALYSE ---")
+            rag_logger.info(f"[OPTIMIERUNG] MetadataReplacementPostProcessor aktiv: JA")
+            rag_logger.info(f"[ZIEL] Target Metadata Key: 'window' (Sentence-Window Kontext)")
+            rag_logger.info(f"[FUNKTION] Ersetzt einzelne Sätze durch erweiterten Kontext vor LLM-Verarbeitung")
+            
             rag_logger.info(f"\n--- QUELLEN-ANALYSE ---")
             if source_nodes:
                 rag_logger.info(f"[DATEI] Anzahl der Source Nodes: {len(source_nodes)}")
@@ -565,11 +610,30 @@ async def chat_completions(request: ChatRequest):
                     rag_logger.info(f"│  [STERN] Similarity Score: {score:.6f}")
                     rag_logger.info(f"│  [ID] Node ID: {node.node_id if hasattr(node, 'node_id') else 'N/A'}")
                     
+                    # Sentence-Window spezifische Analyse
+                    has_window = 'window' in node.metadata if hasattr(node, 'metadata') and node.metadata else False
+                    has_original = 'original_sentence' in node.metadata if hasattr(node, 'metadata') and node.metadata else False
+                    rag_logger.info(f"│  [OPTIMIERUNG] Sentence-Window Metadaten:")
+                    rag_logger.info(f"│     Window verfügbar: {'[JA]' if has_window else '[NEIN]'}")
+                    rag_logger.info(f"│     Original-Satz verfügbar: {'[JA]' if has_original else '[NEIN]'}")
+                    
+                    if has_window and node.metadata['window']:
+                        window_length = len(node.metadata['window'])
+                        original_length = len(node.metadata.get('original_sentence', ''))
+                        rag_logger.info(f"│     Window-Länge: {window_length} Zeichen")
+                        rag_logger.info(f"│     Original-Länge: {original_length} Zeichen")
+                        rag_logger.info(f"│     Kontext-Erweiterung: {window_length - original_length:+d} Zeichen")
+                    
                     # Vollständige Metadaten loggen
                     if hasattr(node, 'metadata') and node.metadata:
                         rag_logger.info(f"│  [KONTEXT] Vollständige Metadaten:")
                         for key, value in node.metadata.items():
-                            rag_logger.info(f"│     {key}: {value}")
+                            if key in ['window', 'original_sentence']:
+                                # Kürze die Ausgabe für window und original_sentence
+                                preview = str(value)[:100] + "..." if len(str(value)) > 100 else str(value)
+                                rag_logger.info(f"│     {key}: {preview}")
+                            else:
+                                rag_logger.info(f"│     {key}: {value}")
                     
                     rag_logger.info(f"├─ CHUNK-TEXT:")
                     rag_logger.info(f"│  [TEXT] Text-Länge: {len(node.text)} Zeichen")
@@ -865,7 +929,7 @@ async def api_chat(request: dict):
         chat_request = ChatRequest(
             messages=messages,
             model=request.get("model", "llama3.2:1b"),
-            temperature=request.get("temperature", 0.7),
+            temperature=request.get("temperature", 0.2),
             max_tokens=request.get("max_tokens", 1000)
         )
         

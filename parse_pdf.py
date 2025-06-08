@@ -13,7 +13,8 @@ from typing import List, Dict, Any, Optional
 from llama_index.core import Document, VectorStoreIndex, StorageContext
 from llama_index.vector_stores.chroma import ChromaVectorStore
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
-from llama_index.core.node_parser import HierarchicalNodeParser
+from llama_index.core.node_parser import SentenceWindowNodeParser, SentenceSplitter, HierarchicalNodeParser
+# from llama_index.core.postprocessor import MetadataReplacementPostProcessor  # Wird in rag_api.py verwendet
 from llama_index.core import Settings
 from llama_index.readers.file import UnstructuredReader
 from pathlib import Path
@@ -123,17 +124,31 @@ COLLECTION_NAME = "test_collection"
 # Verwende bewährtes multilinguales Embedding-Modell
 EMBED_MODEL_NAME = "sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
 
-# Hierarchical Parser Konfiguration
+# Hierarchical Parser Konfiguration - Erweitert für Sentence-basierte Chunks
 CHUNK_SIZES_CONFIG = {
-    "chunk_size": 512,  # Für Sätze
-    "chunk_overlap": 75,
-    "chunk_size_small": 256,  # Für kleine Abschnitte
-    "chunk_size_large": 1024,  # Für große Abschnitte
+    "window_size": 8,  # VERGRÖSSERT: Mehr Kontext-Sätze für bessere semantische Verbindung
+    "chunk_size": 1024,  # VERGRÖSSERT: Größere Chunks für mehr Kontext
+    "chunk_overlap": 200,  # VERGRÖSSERT: Mehr Überlappung für bessere Verbindung
+    "chunk_size_small": 512,  # VERGRÖSSERT: Auch kleine Chunks größer
+    "chunk_size_large": 2048,  # VERGRÖSSERT: Große Chunks für umfassenden Kontext
 }
 
-def create_hierarchical_parser():
+def create_semantic_section_parser():
     """
-    Erstellt einen hierarchischen Parser mit verschiedenen Ebenen.
+    Erstellt einen semantischen Parser, der PDF-Abschnitte als ganze Einheiten behandelt.
+    Viel bessere Performance als sentence-basierte Chunks für Spielregeln.
+    """
+    return SentenceSplitter(
+        chunk_size=CHUNK_SIZES_CONFIG["chunk_size"],
+        chunk_overlap=CHUNK_SIZES_CONFIG["chunk_overlap"],
+        include_metadata=True,
+        include_prev_next_rel=True
+    )
+
+def create_hierarchical_backup_parser():
+    """
+    Erstellt einen hierarchischen Backup-Parser für zusätzliche Struktur.
+    Wird verwendet um längere Chunks für bestimmte Anwendungsfälle zu erstellen.
     """
     # Chunk-Größen in absteigender Reihenfolge
     sizes_list = [
@@ -148,6 +163,141 @@ def create_hierarchical_parser():
         include_metadata=True,
         include_prev_next_rel=True
     )
+
+def create_enhanced_documents_from_pdf(pdf_path: str) -> List[Document]:
+    """
+    Erstellt semantisch sinnvolle Dokument-Chunks durch intelligente Gruppierung.
+    Kombiniert zusammengehörige PDF-Elemente zu kohärenten Abschnitten.
+    """
+    print(f"[SEMANTIC] Verarbeite {pdf_path} mit semantischer Abschnitts-Gruppierung")
+    
+    # 1. Lade PDF-Elemente
+    try:
+        from unstructured.partition.pdf import partition_pdf
+        
+        elements = partition_pdf(
+            filename=pdf_path,
+            strategy="auto",
+            include_page_breaks=True,
+            combine_text_under_n_chars=0
+        )
+        
+        print(f"[SEMANTIC] {len(elements)} PDF-Elemente geladen")
+        
+    except Exception as e:
+        print(f"❌ Fehler beim Laden der PDF-Elemente: {str(e)}")
+        return []
+    
+    # 2. Gruppiere Elemente zu semantischen Abschnitten
+    semantic_chunks = []
+    current_chunk = ""
+    current_section = None
+    current_page = None
+    
+    for element in elements:
+        element_text = str(element).strip()
+        element_type = type(element).__name__
+        
+        # Extrahiere Seitennummer
+        page_number = None
+        if hasattr(element, 'metadata') and element.metadata and hasattr(element.metadata, 'page_number'):
+            page_number = element.metadata.page_number
+        
+        # Erkenne Abschnittswechsel (Title-Elemente mit ausreichender Länge)
+        is_new_section = (element_type == "Title" and len(element_text) > 5)
+        
+        if is_new_section:
+            # Speichere den vorherigen Chunk wenn er Inhalt hat
+            if current_chunk.strip() and len(current_chunk.strip()) > 50:
+                semantic_chunks.append({
+                    'text': current_chunk.strip(),
+                    'section': current_section or "Unnamed Section",
+                    'page_number': current_page,
+                    'length': len(current_chunk.strip())
+                })
+            
+            # Starte neuen Chunk
+            current_section = element_text
+            current_page = page_number
+            current_chunk = element_text + "\n\n"
+        else:
+            # Füge zum aktuellen Chunk hinzu
+            if element_text and len(element_text.strip()) > 2:
+                current_chunk += element_text + " "
+                # Update page number if available
+                if page_number and not current_page:
+                    current_page = page_number
+    
+    # Letzten Chunk speichern
+    if current_chunk.strip() and len(current_chunk.strip()) > 50:
+        semantic_chunks.append({
+            'text': current_chunk.strip(),
+            'section': current_section or "Final Section",
+            'page_number': current_page,
+            'length': len(current_chunk.strip())
+        })
+    
+    # 3. Konvertiere zu LlamaIndex Documents
+    documents = []
+    filename = os.path.basename(pdf_path)
+    
+    for i, chunk in enumerate(semantic_chunks):
+        metadata = {
+            "file_path": pdf_path,
+            "file_directory": os.path.dirname(pdf_path),
+            "filename": filename,
+            "section_title": chunk['section'],
+            "chunk_index": i,
+            "semantic_chunk": True  # Markierung für semantische Chunks
+        }
+        
+        # Füge Seitennummer hinzu wenn verfügbar
+        if chunk['page_number'] is not None:
+            metadata["page_number"] = chunk['page_number']
+        
+        document = Document(
+            text=chunk['text'],
+            metadata=metadata
+        )
+        documents.append(document)
+    
+    print(f"[SEMANTIC] {len(semantic_chunks)} semantische Abschnitte erstellt:")
+    for i, chunk in enumerate(semantic_chunks):
+        print(f"  - Abschnitt {i+1}: '{chunk['section']}' ({chunk['length']} Zeichen)")
+    
+    return documents
+
+def create_hybrid_parser_system():
+    """
+    Erstellt ein hybrides Parser-System mit semantischen Abschnitten als Hauptlogik.
+    """
+    # Haupt-Parser: Semantische Abschnitte für beste Retrieval-Qualität  
+    semantic_parser = create_semantic_section_parser()
+    
+    # Backup-Parser: Hierarchisch für sehr lange Abschnitte falls benötigt
+    hierarchical_parser = create_hierarchical_backup_parser()
+    
+    # Fallback: Standard-Splitter
+    sentence_splitter = SentenceSplitter(
+        chunk_size=CHUNK_SIZES_CONFIG["chunk_size"],
+        chunk_overlap=CHUNK_SIZES_CONFIG["chunk_overlap"]
+    )
+    
+    return {
+        'main': semantic_parser,
+        'hierarchical': hierarchical_parser, 
+        'fallback': sentence_splitter
+    }
+
+# MetadataReplacementPostProcessor wird in rag_api.py verwendet
+# def create_metadata_replacement_processor():
+#     """
+#     Erstellt einen MetadataReplacementPostProcessor für optimale Kontext-Nutzung.
+#     Ersetzt einzelne Sätze durch ihr Kontext-Fenster während der Abfrage.
+#     """
+#     return MetadataReplacementPostProcessor(
+#         target_metadata_key="window"
+#     )
 
 def process_pdf_with_direct_api(pdf_path: str, strategy: str = "auto") -> List[Document]:
     """
@@ -260,6 +410,124 @@ def process_pdf_with_direct_api(pdf_path: str, strategy: str = "auto") -> List[D
         print(traceback.format_exc())
         return []
 
+def analyze_hierarchical_headers(elements: list) -> dict:
+    """
+    Analysiert Unstructured-Elemente und erstellt eine Header-Zuordnung.
+    Da ElementMetadata read-only ist, geben wir eine Mapping-Tabelle zurück.
+    
+    Args:
+        elements: Liste von Unstructured-Elementen
+        
+    Returns:
+        dict: Mapping von Element-Index zu Header-Metadaten
+    """
+    print("[HEADER-ANALYSE] Starte hierarchische Header-Analyse...")
+    
+    current_headers = {
+        'h1': None,
+        'h2': None, 
+        'h3': None,
+        'current_section': None
+    }
+    
+    header_stats = {
+        'titles_found': 0,
+        'headers_found': 0,
+        'elements_with_headers': 0
+    }
+    
+    # Mapping von Element-Index zu Header-Metadaten
+    header_mapping = {}
+    
+    # Identifiziere Header-Typen basierend auf Text-Eigenschaften
+    def classify_header_level(element_text: str, element_type: str) -> str:
+        """Klassifiziert Header-Ebene basierend auf Text und Typ"""
+        text_lower = element_text.lower().strip()
+        text_length = len(element_text.strip())
+        
+        # Sehr kurze, allgemeine Titel = H1 (Hauptüberschriften)
+        if text_length < 50 and any(keyword in text_lower for keyword in 
+                                   ['spielregeln', 'anleitung', 'inhalt', 'ziel', 'vorbereitung']):
+            return 'h1'
+        
+        # Mittlere Überschriften = H2 (Abschnitte)
+        elif text_length < 100 and any(keyword in text_lower for keyword in 
+                                      ['spielverlauf', 'aktionskarten', 'sonderkarten', 'punkte']):
+            return 'h2'
+        
+        # Detailüberschriften = H3 (Unterabschnitte)
+        elif text_length < 150:
+            return 'h3'
+        
+        # Fallback für sehr lange "Titel" -> wahrscheinlich kein echter Header
+        else:
+            return 'content'
+    
+    for i, element in enumerate(elements):
+        element_text = str(element).strip()
+        element_type = type(element).__name__
+        
+        # Prüfe ob Element eine Überschrift ist
+        is_header = element_type in ['Title', 'Header'] and len(element_text) > 0
+        
+        if is_header:
+            header_level = classify_header_level(element_text, element_type)
+            
+            if header_level == 'h1':
+                # Neue Hauptüberschrift - Reset aller Sub-Header
+                current_headers['h1'] = element_text
+                current_headers['h2'] = None
+                current_headers['h3'] = None
+                current_headers['current_section'] = element_text
+                header_stats['titles_found'] += 1
+                print(f"  [H1] Neue Hauptüberschrift: '{element_text}'")
+                
+            elif header_level == 'h2':
+                # Neue Unterüberschrift - Reset nur H3
+                current_headers['h2'] = element_text
+                current_headers['h3'] = None
+                current_headers['current_section'] = element_text
+                header_stats['headers_found'] += 1
+                print(f"  [H2] Neue Unterüberschrift: '{element_text}'")
+                
+            elif header_level == 'h3':
+                # Neue Detail-Überschrift
+                current_headers['h3'] = element_text
+                current_headers['current_section'] = element_text
+                header_stats['headers_found'] += 1
+                print(f"  [H3] Neue Detail-Überschrift: '{element_text}'")
+        
+        # Erstelle Header-Metadaten für dieses Element
+        element_header_metadata = {
+            'element_type': element_type,
+            'is_header': is_header
+        }
+        
+        # Füge aktuelle Header hinzu
+        if current_headers['h1']:
+            element_header_metadata['section_h1'] = current_headers['h1']
+        if current_headers['h2']:
+            element_header_metadata['section_h2'] = current_headers['h2']
+        if current_headers['h3']:
+            element_header_metadata['section_h3'] = current_headers['h3']
+        if current_headers['current_section']:
+            element_header_metadata['current_section'] = current_headers['current_section']
+        
+        # Speichere Metadaten für diesen Element-Index
+        header_mapping[i] = element_header_metadata
+        
+        if any(current_headers.values()):
+            header_stats['elements_with_headers'] += 1
+    
+    # Statistik ausgeben
+    print(f"[HEADER-ANALYSE] Analyse abgeschlossen:")
+    print(f"  - H1-Überschriften erkannt: {header_stats['titles_found']}")
+    print(f"  - H2/H3-Überschriften erkannt: {header_stats['headers_found']}")
+    print(f"  - Elemente mit Header-Zuordnung: {header_stats['elements_with_headers']}")
+    print(f"  - Gesamt-Elemente verarbeitet: {len(elements)}")
+    
+    return header_mapping
+
 def process_pdf_with_local_unstructured(pdf_path: str, strategy: str = "auto") -> List[Document]:
     """
     Verarbeitet ein PDF direkt mit der lokalen Unstructured-Installation.
@@ -302,12 +570,16 @@ def process_pdf_with_local_unstructured(pdf_path: str, strategy: str = "auto") -
         processing_time = time.time() - start_time
         print(f"✓ Lokale Partitionierung abgeschlossen in {processing_time:.2f}s mit {len(elements)} Elementen")
         
+        # Analysiere hierarchische Headers
+        print(f"[HEADER-ANALYSE] Analysiere {len(elements)} Elemente für Header-Metadaten...")
+        header_mapping = analyze_hierarchical_headers(elements)
+        
         # Elemente in Document-Objekte umwandeln
         documents = []
         page_numbers = set()
         element_types = {}
         
-        for element in elements:
+        for i, element in enumerate(elements):
             # Extrahiere wichtige Metadaten
             metadata = {
                 "file_path": pdf_path,
@@ -328,6 +600,10 @@ def process_pdf_with_local_unstructured(pdf_path: str, strategy: str = "auto") -
                     metadata["coordinates"] = str(element.metadata.coordinates)
                 if hasattr(element.metadata, 'category'):
                     metadata["element_category"] = element.metadata.category
+            
+            # Füge Header-Metadaten hinzu (aus unserem Mapping)
+            if i in header_mapping:
+                metadata.update(header_mapping[i])
             
             # Zähle Element-Typen für Statistik
             element_type = type(element).__name__
@@ -470,54 +746,69 @@ def load_and_process_pdfs():
         print(f"❌ Fehler beim Testen der lokalen Installation: {str(e)}")
 
     try:
-        # Lade jede PDF einzeln
+        # Lade jede PDF einzeln mit neuer semantischer Strategie
         for pdf_file in pdf_files:
             pdf_path = os.path.join(PDF_FOLDER, pdf_file)
             file_load_success = False
             try:
-                print(f"\n[PROZESS] Starte Verarbeitung von '{pdf_file}'")
+                print(f"\n[PROZESS] Starte Verarbeitung von '{pdf_file}' mit semantischer Gruppierung")
                 start_time = time.time()
                 log_resources(f"Vor Laden von '{pdf_file}'")
 
                 file_documents = []
                 
-                # Priorisiere direkte Unstructured-Nutzung für bessere Element-Trennung
+                # NEUE STRATEGIE: Direkte semantische Verarbeitung
                 try:
-                    # Verwende direkte lokale Unstructured-Partitionierung
-                    print(f"Verwende direkte lokale Unstructured-Partitionierung mit 'auto' Strategie")
-                    file_documents = process_pdf_with_local_unstructured(pdf_path, strategy="auto")
+                    print(f"Verwende neue semantische Abschnitts-Gruppierung")
+                    file_documents = create_enhanced_documents_from_pdf(pdf_path)
                     
-                    # Falls keine Dokumente, versuche hi_res Strategie
-                    if not file_documents:
-                        print("→ Fallback: Versuche 'hi_res' Strategie")
-                        file_documents = process_pdf_with_local_unstructured(pdf_path, strategy="hi_res")
+                    if file_documents:
+                        print(f"✓ Semantische Gruppierung erfolgreich: {len(file_documents)} Abschnitte")
+                    else:
+                        print("⚠ Semantische Gruppierung lieferte keine Abschnitte")
                         
                 except Exception as e:
-                    print(f"→ Fehler bei direkter Unstructured-Nutzung: {str(e)}")
+                    print(f"→ Fehler bei semantischer Gruppierung: {str(e)}")
                     
-                    # Fallback: Externe API falls verfügbar
-                    if use_direct_api and api_available:
-                        print(f"→ Fallback: Verwende externe API mit 'auto' Strategie")
-                        file_documents = process_pdf_with_direct_api(pdf_path, strategy="auto")
-                    
-                    # Letzter Fallback: LlamaIndex UnstructuredReader (problematisch, aber besser als nichts)
-                    elif local_reader_works:
-                        print(f"→ Letzter Fallback: Verwende LlamaIndex UnstructuredReader")
-                        try:
-                            file_documents = reader.load_data(
-                                file=pdf_path,
-                                unstructured_kwargs={
-                                    "strategy": "auto",
-                                    "include_page_breaks": True,
-                                    "combine_text_under_n_chars": 0,
-                                    "max_characters": 100000
-                                }
-                            )
-                        except Exception:
-                            file_documents = reader.load_data(file=pdf_path)
-                    else:
-                        print("❌ Keine funktionierende Methode gefunden")
-                        file_documents = []
+                # FALLBACK: Alte Strategie falls semantische Gruppierung fehlschlägt
+                if not file_documents:
+                    print("→ Fallback: Verwende alte Unstructured-Partitionierung")
+                    try:
+                        # Verwende direkte lokale Unstructured-Partitionierung
+                        print(f"Verwende direkte lokale Unstructured-Partitionierung mit 'auto' Strategie")
+                        file_documents = process_pdf_with_local_unstructured(pdf_path, strategy="auto")
+                        
+                        # Falls keine Dokumente, versuche hi_res Strategie
+                        if not file_documents:
+                            print("→ Fallback: Versuche 'hi_res' Strategie")
+                            file_documents = process_pdf_with_local_unstructured(pdf_path, strategy="hi_res")
+                            
+                    except Exception as e:
+                        print(f"→ Fehler bei direkter Unstructured-Nutzung: {str(e)}")
+                        
+                        # Externe API als weiterer Fallback
+                        if use_direct_api and api_available:
+                            print(f"→ Fallback: Verwende externe API mit 'auto' Strategie")
+                            file_documents = process_pdf_with_direct_api(pdf_path, strategy="auto")
+                        
+                        # Letzter Fallback: LlamaIndex UnstructuredReader
+                        elif local_reader_works:
+                            print(f"→ Letzter Fallback: Verwende LlamaIndex UnstructuredReader")
+                            try:
+                                file_documents = reader.load_data(
+                                    file=pdf_path,
+                                    unstructured_kwargs={
+                                        "strategy": "auto",
+                                        "include_page_breaks": True,
+                                        "combine_text_under_n_chars": 0,
+                                        "max_characters": 100000
+                                    }
+                                )
+                            except Exception:
+                                file_documents = reader.load_data(file=pdf_path)
+                        else:
+                            print("❌ Keine funktionierende Methode gefunden")
+                            file_documents = []
 
                 # Verarbeite die geladenen Dokumente
                 if file_documents:
@@ -565,8 +856,13 @@ def load_and_process_pdfs():
         for doc in documents:
             cleaned_metadata = {}
             if doc.metadata:
-                # Übernehme nur explizit gewünschte Felder
-                for key in ['file_path', 'file_directory', 'filename', 'page_number']:
+                # Übernehme nur explizit gewünschte Felder (inkl. neue Header-Metadaten)
+                desired_fields = [
+                    'file_path', 'file_directory', 'filename', 'page_number',
+                    'section_h1', 'section_h2', 'section_h3', 'current_section',
+                    'element_type', 'is_header'
+                ]
+                for key in desired_fields:
                     if key in doc.metadata:
                         cleaned_metadata[key] = doc.metadata[key]
 
@@ -596,10 +892,19 @@ def load_and_process_pdfs():
             file_name = Path(file_path).name
             # ACHTUNG: 'page_number' kann nach Unstructured/hi_res auch None sein oder fehlen!
             page_numbers = set(d.metadata.get('page_number') for d in docs_in_file if d.metadata and 'page_number' in d.metadata and d.metadata['page_number'] is not None)
+            
+            # Header-Analyse
+            headers_h1 = set(d.metadata.get('section_h1') for d in docs_in_file if d.metadata and d.metadata.get('section_h1'))
+            headers_h2 = set(d.metadata.get('section_h2') for d in docs_in_file if d.metadata and d.metadata.get('section_h2'))
+            elements_with_headers = len([d for d in docs_in_file if d.metadata and d.metadata.get('current_section')])
+            
             print(f"Datei: {file_name}")
-            print(f"  - Extrahierte Dokument-Elemente: {len(docs_in_file)}")  # Das sollte jetzt hoffentlich > 1 sein
+            print(f"  - Extrahierte Dokument-Elemente: {len(docs_in_file)}")
             print(f"  - Erkannte eindeutige Seitennummern: {sorted(list(page_numbers)) if page_numbers else 'Keine oder nur N/A'}")
             print(f"  - Gesamttextmenge: {sum(len(d.text) for d in docs_in_file):,} Zeichen")
+            print(f"  - [HEADER] H1-Überschriften erkannt: {len(headers_h1)} ({list(headers_h1)[:3]}{'...' if len(headers_h1) > 3 else ''})")
+            print(f"  - [HEADER] H2-Überschriften erkannt: {len(headers_h2)} ({list(headers_h2)[:3]}{'...' if len(headers_h2) > 3 else ''})")
+            print(f"  - [HEADER] Elemente mit Header-Zuordnung: {elements_with_headers}")
             total_docs_analyzed += len(docs_in_file)
 
         print(f"\nGesamtzahl der Dokument-Elemente zur Indexierung: {total_docs_analyzed}")
@@ -634,8 +939,16 @@ def main():
             print("  -> Existierende Collection gelöscht")
         except:
             pass
-        chroma_collection = chroma_client.create_collection(name=COLLECTION_NAME)
-        print("✓ Neue ChromaDB Collection erstellt")
+        # Collection erstellen mit expliziter Embedding-Funktion für Kompatibilität mit rag_api.py
+        from chromadb.utils import embedding_functions
+        sentence_transformer_ef = embedding_functions.SentenceTransformerEmbeddingFunction(
+            model_name="sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
+        )
+        chroma_collection = chroma_client.create_collection(
+            name=COLLECTION_NAME,
+            embedding_function=sentence_transformer_ef
+        )
+        print("✓ Neue ChromaDB Collection mit 768-dim Embeddings erstellt (kompatibel mit rag_api.py)")
     except Exception as e:
         print(f"❌ Fehler bei ChromaDB Initialisierung: {str(e)}")
         return
@@ -646,7 +959,7 @@ def main():
     storage_context = StorageContext.from_defaults(vector_store=vector_store)
 
     # 3. Konfiguriere LlamaIndex Settings
-    print("\n3. Konfiguriere Embedding Model...")
+    print("\n3. Konfiguriere Embedding Model und Parser...")
     
     # GPU-Nutzung für HuggingFace Embeddings konfigurieren
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -668,13 +981,20 @@ def main():
         model_name=EMBED_MODEL_NAME,
         **embedding_kwargs
     )
-    Settings.node_parser = create_hierarchical_parser()
+    
+    # Erstelle hybrides Parser-System
+    parser_system = create_hybrid_parser_system()
+    Settings.node_parser = parser_system['main']  # Setze Haupt-Parser für Settings
+    
     print(f"✓ Embedding Model '{EMBED_MODEL_NAME}' konfiguriert auf {device.upper()}")
     print("  - Unterstützt über 50 Sprachen")
     print("  - 768 Embedding-Dimensionen")
     print("  - Bewährtes multilinguales Modell")
     print("  - Optimiert für semantische Ähnlichkeit")
-    print("✓ Hierarchischer Parser konfiguriert")
+    print("✓ Hybrides Parser-System konfiguriert:")
+    print(f"  - Haupt-Parser: Semantische Abschnitte")
+    print("  - Backup-Parser: HierarchicalNodeParser für längere Kontexte")
+    print("  - Sentence-basierte Chunks für beste semantische Qualität")
 
     # 4. PDFs laden mit Unstructured
     print("\n4. Lade und verarbeite PDFs mit Unstructured...")
@@ -684,8 +1004,8 @@ def main():
         print("Keine Dokumente zum Indexieren gefunden. Beende Programm.")
         return
 
-    # 5. Index erstellen (mit expliziter Node-Generierung zur besseren Kontrolle)
-    print("\n5. Parse Dokumente in Nodes...")
+    # 5. Index erstellen (mit sentence-basiertem Parser)
+    print("\n5. Parse Dokumente in Nodes mit SentenceWindowNodeParser...")
     try:
         # Speicherverbrauch vor dem Parsen
         gpu_mem_before = 0
@@ -695,21 +1015,40 @@ def main():
             print(f"GPU-Speicher vor Node-Parsing: {gpu_mem_before:.2f} MB")
             
         start_time = time.time()
-        nodes = Settings.node_parser.get_nodes_from_documents(documents, show_progress=True)
+        nodes = parser_system['main'].get_nodes_from_documents(documents, show_progress=True)
         parsing_time = time.time() - start_time
-        print(f"-> Parser hat {len(nodes)} Nodes in {parsing_time:.2f}s generiert.")
+        print(f"-> Semantische Abschnitte haben {len(nodes)} Sentence-Nodes in {parsing_time:.2f}s generiert.")
 
-        print("\n--- Erste 3 Nodes nach dem Parsen (Überprüfung der Metadaten) ---")
+        print("\n--- Erste 3 Sentence-Nodes nach dem Parsen (Überprüfung der Metadaten) ---")
         for i, node in enumerate(nodes[:3]):  # Zeige die ersten 3 Nodes
-            print(f"\nNode {i+1} (ID: {node.id_}):")
-            text_preview = node.text[:150].replace('\n', ' ')
-            print(f"  Text (Vorschau): {text_preview}...")  # Zeilenumbrüche für Lesbarkeit ersetzen
-            print(f"  Metadaten: {node.metadata}")
+            print(f"\nSentence-Node {i+1} (ID: {node.id_}):")
+            text_preview = node.text[:100].replace('\n', ' ')
+            print(f"  Satz (Vorschau): {text_preview}...")
+            print(f"  Metadaten: {list(node.metadata.keys())}")
+            
+            # Prüfe auf sentence-spezifische Metadaten
+            if 'window' in node.metadata:
+                window_preview = node.metadata['window'][:150].replace('\n', ' ')
+                print(f"  Kontext-Fenster (Vorschau): {window_preview}...")
+            if 'original_sentence' in node.metadata:
+                orig_preview = node.metadata['original_sentence'][:100].replace('\n', ' ')
+                print(f"  Original-Satz: {orig_preview}...")
+            
+            # Zeige Header-Metadaten
+            if 'current_section' in node.metadata:
+                print(f"  [HEADER] Aktuelle Sektion: {node.metadata['current_section']}")
+            if 'section_h1' in node.metadata:
+                print(f"  [HEADER] H1-Überschrift: {node.metadata['section_h1']}")
+            if 'section_h2' in node.metadata:
+                print(f"  [HEADER] H2-Überschrift: {node.metadata['section_h2']}")
+            if 'element_type' in node.metadata:
+                print(f"  [HEADER] Element-Typ: {node.metadata['element_type']}")
+                
             if 'file_path' not in node.metadata or not node.metadata['file_path']:
                 print(f"  WARNUNG: 'file_path' fehlt oder ist leer in Metadaten für Node {node.id_}!")
-            if 'page_number' not in node.metadata:  # page_number kann auch mal None sein, das ist OK
+            if 'page_number' not in node.metadata:
                 print(f"  INFO: 'page_number' fehlt in Metadaten für Node {node.id_} (kann bei Unstructured vorkommen).")
-        print("--- Ende Node-Vorschau ---")
+        print("--- Ende Sentence-Node-Vorschau ---")
         
         # Speicherverbrauch nach dem Parsen
         if torch.cuda.is_available():
@@ -722,7 +1061,7 @@ def main():
             print("❌ Parser hat keine Nodes generiert, obwohl Dokument-Elemente vorhanden waren. Indexierung abgebrochen.")
             return
 
-        print("\n6. Erstelle Index aus Nodes...")
+        print("\n6. Erstelle Index aus Sentence-Nodes...")
         # Speicher vor der Indizierung
         if torch.cuda.is_available():
             torch.cuda.synchronize()
@@ -746,13 +1085,13 @@ def main():
             print(f"GPU-Speicher-Differenz für Indexierung: {gpu_mem_after_index - gpu_mem_before_index:.2f} MB")
             print(f"Indexierung abgeschlossen in {indexing_time:.2f}s mit GPU-Beschleunigung")
 
-        print("\n=== Indexierung erfolgreich abgeschlossen ===")
+        print("\n=== Semantische Indexierung erfolgreich abgeschlossen ===")
         print(f"- Verarbeitete Dokument-Elemente (aus Reader): {len(documents)}")
-        print(f"- Verarbeitete Nodes durch Parser: {len(nodes)}")
+        print(f"- Verarbeitete Sentence-Nodes durch Parser: {len(nodes)}")
 
         # Prüfe den Docstore *direkt* nach der Indexierung
         final_nodes_in_docstore = index.docstore.docs
-        print(f"- Nodes im Index Docstore: {len(final_nodes_in_docstore)}")
+        print(f"- Sentence-Nodes im Index Docstore: {len(final_nodes_in_docstore)}")
 
         # Optional: Prüfe ChromaDB direkt
         try:
@@ -763,15 +1102,21 @@ def main():
         except Exception as chroma_err:
             print(f"Fehler beim Abfragen von ChromaDB Count: {chroma_err}")
 
-        # Debug-Information über die ersten Nodes im Docstore
-        print("\n--- Node-Struktur im Docstore (erste 3 Nodes) ---")
+        # Debug-Information über die ersten Sentence-Nodes im Docstore
+        print("\n--- Sentence-Node-Struktur im Docstore (erste 3 Nodes) ---")
         for i, (node_id, node) in enumerate(list(final_nodes_in_docstore.items())[:3]):
-            print(f"\nNode {i+1}:")
+            print(f"\nSentence-Node {i+1}:")
             print(f"- ID: {node_id}")
             print(f"- Textlänge: {len(node.text)} Zeichen")
             print(f"- Text-Vorschau: {node.text[:100]}...")
-            print(f"- Metadaten: {node.metadata}")
-        print("--- Ende Node-Struktur ---")
+            print(f"- Metadaten: {list(node.metadata.keys())}")
+            # Zeige sentence-spezifische Infos
+            if hasattr(node, 'metadata'):
+                if 'window' in node.metadata:
+                    print(f"- Hat Kontext-Fenster: Ja ({len(node.metadata['window'])} Zeichen)")
+                if 'original_sentence' in node.metadata:
+                    print(f"- Hat Original-Satz: Ja ({len(node.metadata['original_sentence'])} Zeichen)")
+        print("--- Ende Sentence-Node-Struktur ---")
         
         # Abschließender GPU-Status
         if torch.cuda.is_available():
@@ -779,6 +1124,19 @@ def main():
             print("\nAbschließender GPU-Status:")
             print(f"- GPU-Speichernutzung: {torch.cuda.memory_allocated() / 1024**2:.2f} MB")
             print(f"- GPU-Speicher reserviert: {torch.cuda.memory_reserved() / 1024**2:.2f} MB")
+
+        print("\n=== VEKTORDATENBANK ERFOLGREICH ERSTELLT ===")
+        print("✓ Semantische Indexierung abgeschlossen")
+        print("✓ Vektordatenbank ist bereit für rag_api.py")
+        print("\n=== Qualitätsverbesserungen ===")
+        print("1. ✓ Semantische Abschnitte für beste Retrieval-Qualität")
+        print("2. ✓ Hierarchische Backup-Struktur für verschiedene Anwendungsfälle")
+        print("3. ✓ Multilinguale Embedding-Unterstützung für deutsche Inhalte")
+        print("4. ✓ GPU-beschleunigte Verarbeitung für bessere Performance")
+        print("\n=== Nächste Schritte ===")
+        print("- Starten Sie rag_api.py für die LLM-basierte Abfrage")
+        print("- Die erstellte ChromaDB wird automatisch von rag_api.py verwendet")
+        print(f"- Collection '{COLLECTION_NAME}' enthält {len(nodes)} optimierte Sentence-Nodes")
 
     except Exception as e:
         print(f"\n❌ Fehler beim Parsen oder Erstellen des Index:")

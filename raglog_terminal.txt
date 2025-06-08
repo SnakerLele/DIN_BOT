@@ -1,73 +1,69 @@
-2025-06-08 10:49:52,226 - DEBUG - === NEUE ANFRAGE EMPFANGEN ===
-2025-06-08 10:49:52,226 - DEBUG - Chat-ID: None
-2025-06-08 10:49:52,226 - DEBUG - Anzahl Messages: 1
-2025-06-08 10:49:52,227 - DEBUG - Message 1: Role='user', Content='Was muss man beim Ablegen der Karten geanu beachten, wenn es nur noch Zwei Spieler sind?'
-2025-06-08 10:49:52,227 - DEBUG - Neue Chat-ID erstellt: 6252b933-e6d4-4bf8-aab0-5680fef777ec
-2025-06-08 10:49:52,227 - DEBUG - Chat-History geladen für ID 6252b933-e6d4-4bf8-aab0-5680fef777ec: 0 Nachrichten
-2025-06-08 10:49:52,230 - DEBUG - === LETZTE USER-MESSAGE ANALYSE ===
-2025-06-08 10:49:52,230 - DEBUG - Content: 'Was muss man beim Ablegen der Karten geanu beachten, wenn es nur noch Zwei Spieler sind?'
-2025-06-08 10:49:52,230 - DEBUG - Länge: 88 Zeichen
-2025-06-08 10:49:52,230 - INFO - [SUCHE] NORMALE RAG-VERARBEITUNG
-2025-06-08 10:49:52,231 - DEBUG - [OK] FINALE USER-MESSAGE für RAG: 'Was muss man beim Ablegen der Karten geanu beachten, wenn es nur noch Zwei Spieler sind?'
-2025-06-08 10:49:53,428 - DEBUG - [SUCHE] Starte Chat-Engine Abfrage...
-2025-06-08 10:49:53,558 - DEBUG - > Top 4 nodes:
-2025-06-08 10:49:53,561 - DEBUG - > [Node 63b82434-ece5-4c83-8fa8-92905aa72944] [Similarity score: 0.44569746519798986] 3. Die Spieler können weiterhin Zieh Zwei oder Zieh Vier Farbenwahlkarte in Folge ablegen, solang...
-2025-06-08 10:49:53,561 - DEBUG - > [Node 5b857290-4f46-4e46-9cce-a0da7b42b1f4] [Similarity score: 0.44569746519798986] 3. Die Spieler können weiterhin Zieh Zwei oder Zieh Vier Farbenwahlkarte in Folge ablegen, solang...
-2025-06-08 10:49:53,561 - DEBUG - > [Node 5ff5372c-5e64-45ed-bae7-cfb16ab2e803] [Similarity score: 0.44569746519798986] 3. Die Spieler können weiterhin Zieh Zwei oder Zieh Vier Farbenwahlkarte in Folge ablegen, solang...
-2025-06-08 10:49:53,562 - DEBUG - > [Node 9d4fcbd8-a011-4337-a7f8-eea915f841db] [Similarity score: 0.43693556158504604] Hat ein Spieler nur noch eine Karte auf seiner Hand übrig, muss er "UNO" rufen (das bedeutet "ein...
-2025-06-08 10:49:53,562 - DEBUG - > Top 4 nodes:
-> [Node 63b82434-ece5-4c83-8fa8-92905aa72944] [Similarity score:             0.445697] 3. Die Spieler können weiterhin Zieh Zwei oder Zieh Vier Farbenwahlkarte in Folge ablegen, solang...
-> [Node 5b857290-4f46-4e46-9cce-a0da7b42b1f4] [Similarity score:             0.445697] 3. Die Spieler können weiterhin Zieh Zwei oder Zieh Vier Farbenwahlkarte in Folge ablegen, solang...
-> [Node 5ff5372c-5e64-45ed-bae7-cfb16ab2e803] [Similarity score:             0.445697] 3. Die Spieler können weiterhin Zieh Zwei oder Zieh Vier Farbenwahlkarte in Folge ablegen, solang...
-> [Node 9d4fcbd8-a011-4337-a7f8-eea915f841db] [Similarity score:             0.436936] Hat ein Spieler nur noch eine Karte auf seiner Hand übrig, muss er "UNO" rufen (das bedeutet "ein...
-2025-06-08 10:49:53,572 - DEBUG - close.started
-2025-06-08 10:49:53,572 - DEBUG - close.complete
-2025-06-08 10:49:53,573 - DEBUG - connect_tcp.started host='localhost' port=11434 local_address=None timeout=120.0 socket_options=None
-2025-06-08 10:49:53,962 - DEBUG - https://us.i.posthog.com:443 "POST /batch/ HTTP/1.1" 200 15
-2025-06-08 10:49:55,617 - DEBUG - connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000001FD16A229C0>
-2025-06-08 10:49:55,617 - DEBUG - send_request_headers.started request=<Request [b'POST']>
-2025-06-08 10:49:55,618 - DEBUG - send_request_headers.complete
-2025-06-08 10:49:55,618 - DEBUG - send_request_body.started request=<Request [b'POST']>
-2025-06-08 10:49:55,618 - DEBUG - send_request_body.complete
-2025-06-08 10:49:55,618 - DEBUG - receive_response_headers.started request=<Request [b'POST']>
-2025-06-08 10:50:05,908 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Content-Type', b'application/json; charset=utf-8'), (b'Date', b'Sun, 08 Jun 2025 08:50:05 GMT'), (b'Content-Length', b'624')])
-2025-06-08 10:50:05,909 - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
-2025-06-08 10:50:05,909 - DEBUG - receive_response_body.started request=<Request [b'POST']>
-2025-06-08 10:50:05,909 - DEBUG - receive_response_body.complete
-2025-06-08 10:50:05,910 - DEBUG - response_closed.started
-2025-06-08 10:50:05,910 - DEBUG - response_closed.complete
-2025-06-08 10:50:05,915 - DEBUG - [OK] Chat-Engine Antwort erhalten: Beim Ablegen von Karten bei nur zwei Spielern gilt das folgende:
-
-*   Wenn ein Spieler noch zwei Kar...
-2025-06-08 10:50:05,917 - INFO - [DATEI] Anzahl der Source Nodes vom Chat Engine: 2
-2025-06-08 10:50:05,920 - DEBUG -   Source Node 1: File='UNO Classic Spielanleitung.pdf', Page='4', Score=0.4457, Node ID='63b82434-ece5-4c83-8fa8-92905aa72944', Text (Vorschau)='3. Die Spieler können weiterhin Zieh Zwei oder Zieh Vier Farbenwahlkar...'
-2025-06-08 10:50:05,921 - DEBUG -   Source Node 2: File='UNO Classic Spielanleitung.pdf', Page='2', Score=0.4369, Node ID='9d4fcbd8-a011-4337-a7f8-eea915f841db', Text (Vorschau)='Hat ein Spieler nur noch eine Karte auf seiner Hand übrig, muss er "UN...'
-2025-06-08 10:50:05,923 - INFO - LLM hat Quellen nicht explizit im Text genannt, füge sie manuell hinzu.
-2025-06-08 10:50:05,926 - INFO - ========== DEBUG-EINTRAG 20250608_105005_925 ==========
-2025-06-08 10:50:05,927 - INFO - [SUCHE] EINGEHENDE REQUEST-DATEN: Chat-ID=None, Model=llama3.2:1b
-2025-06-08 10:50:05,927 - INFO - [CONFIG] suspicious_message_detected: False
-2025-06-08 10:50:05,927 - INFO - [CONFIG] alternative_question_used: False
-2025-06-08 10:50:05,927 - INFO - [CONFIG] chat_history_length: 2
-2025-06-08 10:50:05,927 - INFO - [CONFIG] source_nodes_count: 2
-2025-06-08 10:50:05,927 - INFO - [CONFIG] unique_sources_count: 2
-2025-06-08 10:50:05,928 - INFO - [OK] USER-MESSAGE: 'Was muss man beim Ablegen der Karten geanu beachten, wenn es nur noch Zwei Spieler sind?...' (Länge: 88)
-2025-06-08 10:50:05,928 - INFO - [ROBOTER] RAG-ANTWORT: 'Beim Ablegen von Karten bei nur zwei Spielern gilt das folgende:
-
-*   Wenn ein Spieler noch zwei Kar...' (Länge: 320)
-2025-06-08 10:50:05,928 - INFO - [DATEI] QUELLEN: UNO Classic Spielanleitung.pdf:4, UNO Classic Spielanleitung.pdf:2
-2025-06-08 10:50:05,928 - INFO - ========== ENDE DEBUG-EINTRAG 20250608_105005_925 ==========
-2025-06-08 10:50:05,931 - INFO - [DATEI] Debug-Datei erstellt: debug_20250608_105005_925
-INFO:     127.0.0.1:54119 - "POST /api/chat HTTP/1.1" 200 OK
-2025-06-08 10:50:06,031 - DEBUG - === NEUE ANFRAGE EMPFANGEN ===
-2025-06-08 10:50:06,032 - DEBUG - Chat-ID: None
-2025-06-08 10:50:06,032 - DEBUG - Anzahl Messages: 1
-2025-06-08 10:50:06,033 - DEBUG - Message 1: Role='user', Content='### Task:
+2025-06-08 17:18:44,883 - DEBUG - === NEUE ANFRAGE EMPFANGEN ===
+2025-06-08 17:18:44,883 - DEBUG - Chat-ID: None
+2025-06-08 17:18:44,884 - DEBUG - Anzahl Messages: 1
+2025-06-08 17:18:44,884 - DEBUG - Message 1: Role='user', Content='welche karten gibt es in UNO?'
+2025-06-08 17:18:44,884 - DEBUG - Neue Chat-ID erstellt: 206cfffe-63f6-4dd3-99de-66805df00569
+2025-06-08 17:18:44,885 - DEBUG - Chat-History geladen für ID 206cfffe-63f6-4dd3-99de-66805df00569: 0 Nachrichten
+2025-06-08 17:18:44,885 - DEBUG - === LETZTE USER-MESSAGE ANALYSE ===
+2025-06-08 17:18:44,886 - DEBUG - Content: 'welche karten gibt es in UNO?'
+2025-06-08 17:18:44,886 - DEBUG - Länge: 29 Zeichen
+2025-06-08 17:18:44,886 - INFO - [SUCHE] NORMALE RAG-VERARBEITUNG
+2025-06-08 17:18:44,887 - DEBUG - [OK] FINALE USER-MESSAGE für RAG: 'welche karten gibt es in UNO?'
+2025-06-08 17:18:44,944 - DEBUG - [SUCHE] Starte Chat-Engine Abfrage...
+2025-06-08 17:18:45,001 - DEBUG - > Top 4 nodes:
+2025-06-08 17:18:45,002 - DEBUG - > [Node fc997c5c-a6f5-42fa-94c2-48acc9a81214] [Similarity score: 0.34612488018440135] Die übrigen Karten werden mit dem Gesicht nach unten auf den Tisch gelegt und bilden den KARTENST...
+2025-06-08 17:18:45,002 - DEBUG - > [Node 14e5e726-4b0a-4864-8c46-9488bd6d8b0f] [Similarity score: 0.34612488018440135] Die übrigen Karten werden mit dem Gesicht nach unten auf den Tisch gelegt und bilden den KARTENST...
+2025-06-08 17:18:45,002 - DEBUG - > [Node f84e33f4-8397-45e1-b63f-28f84b3957c8] [Similarity score: 0.34612488018440135] Die übrigen Karten werden mit dem Gesicht nach unten auf den Tisch gelegt und bilden den KARTENST...
+2025-06-08 17:18:45,003 - DEBUG - > [Node 4f1719d8-e8d6-4150-bbed-03222641123e] [Similarity score: 0.34466525340299214] Farbenwahlkarte hat, kann bluffen und die Karte "unerlaubt" legen. Wird er jedoch dabei "erwischt...
+2025-06-08 17:18:45,003 - DEBUG - > Top 4 nodes:
+> [Node fc997c5c-a6f5-42fa-94c2-48acc9a81214] [Similarity score:             0.346125] Die übrigen Karten werden mit dem Gesicht nach unten auf den Tisch gelegt und bilden den KARTENST...
+> [Node 14e5e726-4b0a-4864-8c46-9488bd6d8b0f] [Similarity score:             0.346125] Die übrigen Karten werden mit dem Gesicht nach unten auf den Tisch gelegt und bilden den KARTENST...
+> [Node f84e33f4-8397-45e1-b63f-28f84b3957c8] [Similarity score:             0.346125] Die übrigen Karten werden mit dem Gesicht nach unten auf den Tisch gelegt und bilden den KARTENST...
+> [Node 4f1719d8-e8d6-4150-bbed-03222641123e] [Similarity score:             0.344665] Farbenwahlkarte hat, kann bluffen und die Karte "unerlaubt" legen. Wird er jedoch dabei "erwischt...
+2025-06-08 17:18:45,007 - DEBUG - close.started
+2025-06-08 17:18:45,008 - DEBUG - close.complete
+2025-06-08 17:18:45,008 - DEBUG - connect_tcp.started host='localhost' port=11434 local_address=None timeout=120.0 socket_options=None
+2025-06-08 17:18:47,041 - DEBUG - connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x00000205CAE0A360>
+2025-06-08 17:18:47,042 - DEBUG - send_request_headers.started request=<Request [b'POST']>
+2025-06-08 17:18:47,043 - DEBUG - send_request_headers.complete
+2025-06-08 17:18:47,043 - DEBUG - send_request_body.started request=<Request [b'POST']>
+2025-06-08 17:18:47,044 - DEBUG - send_request_body.complete
+2025-06-08 17:18:47,044 - DEBUG - receive_response_headers.started request=<Request [b'POST']>
+2025-06-08 17:19:03,473 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Content-Type', b'application/json; charset=utf-8'), (b'Date', b'Sun, 08 Jun 2025 15:19:03 GMT'), (b'Content-Length', b'1144')])
+2025-06-08 17:19:03,473 - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2025-06-08 17:19:03,474 - DEBUG - receive_response_body.started request=<Request [b'POST']>
+2025-06-08 17:19:03,474 - DEBUG - receive_response_body.complete
+2025-06-08 17:19:03,483 - DEBUG - response_closed.started
+2025-06-08 17:19:03,483 - DEBUG - response_closed.complete
+2025-06-08 17:19:03,484 - DEBUG - [OK] Chat-Engine Antwort erhalten: Es gibt 108 Karten im UNO-Spiel, die je nach Version des Spiels unterschiedlich angeordnet sind. Hie...   
+2025-06-08 17:19:03,487 - INFO - [DATEI] Anzahl der Source Nodes vom Chat Engine: 2
+2025-06-08 17:19:03,489 - DEBUG -   Source Node 1: File='UNO Classic Spielanleitung.pdf', Page='1', Score=0.3461, Node ID='fc997c5c-a6f5-42fa-94c2-48acc9a81214', Text (Vorschau)='Die übrigen Karten werden mit dem Gesicht nach unten auf den Tisch gel...'
+2025-06-08 17:19:03,490 - DEBUG -   Source Node 2: File='UNO Classic Spielanleitung.pdf', Page='2', Score=0.3447, Node ID='4f1719d8-e8d6-4150-bbed-03222641123e', Text (Vorschau)='Farbenwahlkarte hat, kann bluffen und die Karte "unerlaubt" legen. Wir...'
+2025-06-08 17:19:03,492 - INFO - LLM hat Quellen nicht explizit im Text genannt, füge sie manuell hinzu.
+2025-06-08 17:19:03,494 - INFO - ========== DEBUG-EINTRAG 20250608_171903_493 ==========
+2025-06-08 17:19:03,494 - INFO - [SUCHE] EINGEHENDE REQUEST-DATEN: Chat-ID=None, Model=llama3.2:1b
+2025-06-08 17:19:03,495 - INFO - [CONFIG] suspicious_message_detected: False
+2025-06-08 17:19:03,495 - INFO - [CONFIG] alternative_question_used: False
+2025-06-08 17:19:03,495 - INFO - [CONFIG] chat_history_length: 2
+2025-06-08 17:19:03,496 - INFO - [CONFIG] source_nodes_count: 2
+2025-06-08 17:19:03,496 - INFO - [CONFIG] unique_sources_count: 2
+2025-06-08 17:19:03,496 - INFO - [OK] USER-MESSAGE: 'welche karten gibt es in UNO?...' (Länge: 29)
+2025-06-08 17:19:03,496 - INFO - [ROBOTER] RAG-ANTWORT: 'Es gibt 108 Karten im UNO-Spiel, die je nach Version des Spiels unterschiedlich angeordnet sind. Hie...' (Länge: 818) 
+2025-06-08 17:19:03,496 - INFO - [DATEI] QUELLEN: UNO Classic Spielanleitung.pdf:1, UNO Classic Spielanleitung.pdf:2
+2025-06-08 17:19:03,497 - INFO - ========== ENDE DEBUG-EINTRAG 20250608_171903_493 ==========
+2025-06-08 17:19:03,497 - INFO - [DATEI] Debug-Datei erstellt: debug_20250608_171903_493
+INFO:     127.0.0.1:54658 - "POST /api/chat HTTP/1.1" 200 OK
+2025-06-08 17:19:03,551 - DEBUG - === NEUE ANFRAGE EMPFANGEN ===
+2025-06-08 17:19:03,552 - DEBUG - Chat-ID: None
+2025-06-08 17:19:03,552 - DEBUG - Anzahl Messages: 1
+2025-06-08 17:19:03,553 - DEBUG - Message 1: Role='user', Content='### Task:
 Generate a concise, 3-5 word title with an emoji summarizing the chat history.
 ### Guideli...'
-2025-06-08 10:50:06,034 - DEBUG - Neue Chat-ID erstellt: 596c50d3-1971-41c8-9f8d-86bba5a1d767
-2025-06-08 10:50:06,035 - DEBUG - Chat-History geladen für ID 596c50d3-1971-41c8-9f8d-86bba5a1d767: 0 Nachrichten
-2025-06-08 10:50:06,036 - DEBUG - === LETZTE USER-MESSAGE ANALYSE ===
-2025-06-08 10:50:06,036 - DEBUG - Content: '### Task:
+2025-06-08 17:19:03,554 - WARNING - [WARNUNG] VERDÄCHTIGE MESSAGE ERKANNT in Message 1: Enthält möglicherweise Tag-Generierung oder andere Prompt-Anweisungen
+2025-06-08 17:19:03,554 - DEBUG - Neue Chat-ID erstellt: 7a107fd8-6f15-4223-a061-5c607f1e9f0b
+2025-06-08 17:19:03,555 - DEBUG - Chat-History geladen für ID 7a107fd8-6f15-4223-a061-5c607f1e9f0b: 0 Nachrichten
+2025-06-08 17:19:03,556 - DEBUG - === LETZTE USER-MESSAGE ANALYSE ===
+2025-06-08 17:19:03,556 - DEBUG - Content: '### Task:
 Generate a concise, 3-5 word title with an emoji summarizing the chat history.
 ### Guidelines:
 - The title should clearly represent the main theme or subject of the conversation.
@@ -88,14 +84,34 @@ JSON format: { "title": "your concise title here" }
 - { "title": "🎮 Video Game Development Insights" }
 ### Chat History:
 <chat_history>
-USER: Was muss man beim Ablegen der Karten geanu beachten, wenn es nur noch Zwei Spieler sind?
-ASSISTANT: Beim Ablegen von Karten bei nur zwei Spielern gilt das folgende:
+USER: welche karten gibt es in UNO?
+ASSISTANT: Es gibt 108 Karten im UNO-Spiel, die je nach Version des Spiels unterschiedlich angeordnet sind. Hier sind alle Karten:
 
-*   Wenn ein Spieler noch zwei Karten auf seiner Hand hat und die anderen beiden Spieler keine Karten ziehen können, muss der Spieler, der zweimal "UNO" rufen sollte (die Zahl einer Karte, die nicht gezogen wurde), 2 Strafkarten vom Kartenspiel abziehen.
+1. **Blitzkarten**:
+ * Joker
+ * Wildkarte (oder Zauberkarte)
+2. **Herstellerkarten**:
+ * Solitaire
+3. **Aktionskarten**:
+ * 4 verschiedene Arten:
+    - Action
+    - Reverse
+    - Skip
+    - Draw Two
+4. **Zugkarten**:
+ * 25 verschiedene Karten, darunter:
+ * Wenn die Karte auf dem Stapel liegt (oder nicht)
+ * Wenn die Karte bei Beginn des Spiels gezogen wird
+5. **Gesichtskarten**:
+ * 22 verschiedenen Karten, darunter:
+ * Die übrigen Karten des Spiels, wie die Blitzkarten, die Herstellerkarten und die Aktionskarten
+6. **Karten, die nicht direkt auf einen anderen können (z.B.) sind:**
+ * Das Stapelkarten (die oberste Karte des Stapels)
+ * Die Gesichtskarten (von denen bereits erwähnt wurden)
 
 **Referenzierte Quellen:**
+(Quelle: UNO Classic Spielanleitung.pdf, Seite: 1)
 (Quelle: UNO Classic Spielanleitung.pdf, Seite: 2)
-(Quelle: UNO Classic Spielanleitung.pdf, Seite: 4)
 </chat_history>'
 --- Logging error ---
 Traceback (most recent call last):
@@ -170,55 +186,57 @@ Call stack:
     raw_response = await run_endpoint_function(
   File "C:\Users\plimp\OneDrive\KI\Projekte\DIN_BOT\Bibliotheken\Lib\site-packages\fastapi\routing.py", line 212, in run_endpoint_function
     return await dependant.call(**values)
-  File "C:\Users\plimp\OneDrive\KI\Projekte\DIN_BOT\rag_api.py", line 866, in api_chat
+  File "C:\Users\plimp\OneDrive\KI\Projekte\DIN_BOT\rag_api.py", line 873, in api_chat
     response = await chat_completions(chat_request)
-  File "C:\Users\plimp\OneDrive\KI\Projekte\DIN_BOT\rag_api.py", line 243, in chat_completions
+  File "C:\Users\plimp\OneDrive\KI\Projekte\DIN_BOT\rag_api.py", line 250, in chat_completions
     logger.debug(f"Content: '{user_message}'")
-Message: 'Content: \'### Task:\nGenerate a concise, 3-5 word title with an emoji summarizing the chat history.\n### Guidelines:\n- The title should clearly represent the main theme or subject of the conversation.\n- Use emojis that enhance understanding of the topic, but avoid quotation marks or special formatting.\n- Write the title in the chat\'s primary language; default to English if multilingual.\n- Prioritize accuracy over excessive creativity; keep it clear and simple.\n- Your entire response must consist solely of the JSON object, without any introductory or concluding text.\n- The output must be a single, raw JSON object, without any markdown code fences or other encapsulating text.\n- Ensure no conversational text, affirmations, or explanations precede or follow the raw JSON output, as this will cause direct parsing failure.\n### Output:\nJSON format: { "title": "your concise title here" }\n### Examples:\n- { "title": "📉 Stock Market Trends" },\n- { "title": "🍪 Perfect Chocolate Chip Recipe" },\n- { "title": "Evolution of Music Streaming" },\n- { "title": "Remote Work Productivity Tips" },\n- { "title": "Artificial Intelligence in Healthcare" },\n- { "title": "🎮 Video Game Development Insights" }\n### Chat History:\n<chat_history>\nUSER: Was muss man beim Ablegen der Karten geanu beachten, wenn es nur noch Zwei Spieler sind?\nASSISTANT: Beim Ablegen von Karten bei nur zwei Spielern gilt das folgende:\n\n*   Wenn ein Spieler noch zwei Karten auf seiner Hand hat und die anderen beiden Spieler keine Karten ziehen können, muss der Spieler, der zweimal "UNO" rufen sollte (die Zahl einer Karte, die nicht gezogen wurde), 2 Strafkarten vom Kartenspiel abziehen.\n\n**Referenzierte Quellen:**\n(Quelle: UNO Classic Spielanleitung.pdf, Seite: 2)\n(Quelle: UNO Classic Spielanleitung.pdf, Seite: 4)\n</chat_history>\''
+Message: 'Content: \'### Task:\nGenerate a concise, 3-5 word title with an emoji summarizing the chat history.\n### Guidelines:\n- The title should clearly represent the main theme or subject of the conversation.\n- Use emojis that enhance understanding of the topic, but avoid quotation marks or special formatting.\n- Write the title in the chat\'s primary language; default to English if multilingual.\n- Prioritize accuracy over excessive creativity; keep it clear and simple.\n- Your entire response must consist solely of the JSON object, without any introductory or concluding text.\n- The output must be a single, raw JSON object, without any markdown code fences or other encapsulating text.\n- Ensure no conversational text, affirmations, or explanations precede or follow the raw JSON output, as this will cause direct parsing failure.\n### Output:\nJSON format: { "title": "your concise title here" }\n### Examples:\n- { "title": "📉 Stock Market Trends" },\n- { "title": "🍪 Perfect Chocolate Chip Recipe" },\n- { "title": "Evolution of Music Streaming" },\n- { "title": "Remote Work Productivity Tips" },\n- { "title": "Artificial Intelligence in Healthcare" },\n- { "title": "🎮 Video Game Development Insights" }\n### Chat History:\n<chat_history>\nUSER: welche karten gibt es in UNO?\nASSISTANT: Es gibt 108 Karten im UNO-Spiel, die je nach Version des Spiels unterschiedlich angeordnet sind. Hier sind alle Karten:\n\n1. **Blitzkarten**:\n * Joker\n * Wildkarte (oder Zauberkarte)\n2. **Herstellerkarten**:\n * Solitaire\n3. **Aktionskarten**:\n * 4 verschiedene Arten: \n    - Action\n    - Reverse\n    - Skip\n    - Draw Two\n4. **Zugkarten**:\n * 25 verschiedene Karten, darunter:\n * Wenn die Karte auf dem Stapel liegt (oder nicht)\n * Wenn die Karte bei Beginn des Spiels gezogen wird\n5. **Gesichtskarten**:\n * 22 verschiedenen Karten, darunter:\n * Die übrigen Karten des Spiels, wie die Blitzkarten, die Herstellerkarten und die Aktionskarten\n6. **Karten, die nicht direkt auf einen anderen können (z.B.) sind:**\n * Das Stapelkarten (die oberste Karte des Stapels)\n * Die Gesichtskarten (von denen bereits erwähnt wurden)\n\n**Referenzierte Quellen:**\n(Quelle: UNO Classic Spielanleitung.pdf, Seite: 1)\n(Quelle: UNO Classic Spielanleitung.pdf, Seite: 2)\n</chat_history>\''
 Arguments: ()
-2025-06-08 10:50:06,329 - DEBUG - Länge: 1791 Zeichen
-2025-06-08 10:50:06,333 - WARNING - [ZIEL] META-ANFRAGE ERKANNT: title (Confidence: 1.00)
-2025-06-08 10:50:06,333 - INFO - [BLITZ] Umgehung von RAG - Direkte LLM-Verarbeitung
-2025-06-08 10:50:06,334 - INFO - [ZIEL] VERARBEITE META-ANFRAGE: title (Confidence: 1.00)
-2025-06-08 10:50:06,336 - DEBUG - send_request_headers.started request=<Request [b'POST']>
-2025-06-08 10:50:06,337 - DEBUG - send_request_headers.complete
-2025-06-08 10:50:06,337 - DEBUG - send_request_body.started request=<Request [b'POST']>
-2025-06-08 10:50:06,338 - DEBUG - send_request_body.complete
-2025-06-08 10:50:06,339 - DEBUG - receive_response_headers.started request=<Request [b'POST']>
-2025-06-08 10:50:13,399 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Content-Type', b'application/json; charset=utf-8'), (b'Date', b'Sun, 08 Jun 2025 08:50:13 GMT'), (b'Content-Length', b'349')])
-2025-06-08 10:50:13,399 - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
-2025-06-08 10:50:13,399 - DEBUG - receive_response_body.started request=<Request [b'POST']>
-2025-06-08 10:50:13,400 - DEBUG - receive_response_body.complete
-2025-06-08 10:50:13,400 - DEBUG - response_closed.started
-2025-06-08 10:50:13,400 - DEBUG - response_closed.complete
-2025-06-08 10:50:13,401 - DEBUG - [ROBOTER] LLM-Only Antwort: {"title": "\u2713 Stock Market Trends \u2711"}...
-2025-06-08 10:50:13,402 - INFO - ========== DEBUG-EINTRAG 20250608_105013_401 ==========
-2025-06-08 10:50:13,402 - INFO - [SUCHE] EINGEHENDE REQUEST-DATEN: Chat-ID=None, Model=llama3.2:1b
-2025-06-08 10:50:13,403 - INFO - [CONFIG] meta_request_detected: True
-2025-06-08 10:50:13,403 - INFO - [CONFIG] meta_type: title
-2025-06-08 10:50:13,403 - INFO - [CONFIG] meta_confidence: 1.0
-2025-06-08 10:50:13,403 - INFO - [CONFIG] processing_method: LLM-Only (RAG bypassed)
-2025-06-08 10:50:13,403 - INFO - [CONFIG] chat_history_length: 1
-2025-06-08 10:50:13,404 - INFO - [CONFIG] source_nodes_count: 0
-2025-06-08 10:50:13,404 - INFO - [CONFIG] unique_sources_count: 0
-2025-06-08 10:50:13,404 - INFO - [OK] USER-MESSAGE: '### Task:
+2025-06-08 17:19:03,570 - DEBUG - Länge: 2230 Zeichen
+2025-06-08 17:19:03,572 - WARNING - [ZIEL] META-ANFRAGE ERKANNT: title (Confidence: 1.00)
+2025-06-08 17:19:03,572 - INFO - [BLITZ] Umgehung von RAG - Direkte LLM-Verarbeitung
+2025-06-08 17:19:03,572 - INFO - [ZIEL] VERARBEITE META-ANFRAGE: title (Confidence: 1.00)
+2025-06-08 17:19:03,574 - DEBUG - send_request_headers.started request=<Request [b'POST']>
+2025-06-08 17:19:03,575 - DEBUG - send_request_headers.complete
+2025-06-08 17:19:03,575 - DEBUG - send_request_body.started request=<Request [b'POST']>
+2025-06-08 17:19:03,576 - DEBUG - send_request_body.complete
+2025-06-08 17:19:03,576 - DEBUG - receive_response_headers.started request=<Request [b'POST']>
+2025-06-08 17:19:11,718 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Content-Type', b'application/json; charset=utf-8'), (b'Date', b'Sun, 08 Jun 2025 15:19:11 GMT'), (b'Content-Length', b'356')])
+2025-06-08 17:19:11,719 - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2025-06-08 17:19:11,720 - DEBUG - receive_response_body.started request=<Request [b'POST']>
+2025-06-08 17:19:11,720 - DEBUG - receive_response_body.complete
+2025-06-08 17:19:11,720 - DEBUG - response_closed.started
+2025-06-08 17:19:11,720 - DEBUG - response_closed.complete
+2025-06-08 17:19:11,721 - DEBUG - [ROBOTER] LLM-Only Antwort: {"title": "Karten in UNO-Spielen", "value": "108"}...
+2025-06-08 17:19:11,723 - INFO - ========== DEBUG-EINTRAG 20250608_171911_721 ==========
+2025-06-08 17:19:11,723 - INFO - [SUCHE] EINGEHENDE REQUEST-DATEN: Chat-ID=None, Model=llama3.2:1b
+2025-06-08 17:19:11,724 - INFO - [CONFIG] meta_request_detected: True
+2025-06-08 17:19:11,724 - INFO - [CONFIG] meta_type: title
+2025-06-08 17:19:11,724 - INFO - [CONFIG] meta_confidence: 1.0
+2025-06-08 17:19:11,724 - INFO - [CONFIG] processing_method: LLM-Only (RAG bypassed)
+2025-06-08 17:19:11,726 - INFO - [CONFIG] chat_history_length: 1
+2025-06-08 17:19:11,726 - INFO - [CONFIG] source_nodes_count: 0
+2025-06-08 17:19:11,727 - INFO - [CONFIG] unique_sources_count: 0
+2025-06-08 17:19:11,727 - INFO - [OK] USER-MESSAGE: '### Task:
 Generate a concise, 3-5 word title with an emoji summarizing the chat history.
-### Guideli...' (Länge: 1791)
-2025-06-08 10:50:13,405 - INFO - [ZIEL] META-ANFRAGE: '{"title": "\u2713 Stock Market Trends \u2711"}...'
-2025-06-08 10:50:13,405 - INFO - ========== ENDE DEBUG-EINTRAG 20250608_105013_401 ==========
-2025-06-08 10:50:13,405 - INFO - [DATEI] Meta-Request Debug-Datei erstellt: debug_20250608_105013_401
-2025-06-08 10:50:13,406 - INFO - [OK] Meta-Anfrage erfolgreich verarbeitet: title
-INFO:     127.0.0.1:54128 - "POST /api/chat HTTP/1.1" 200 OK
-2025-06-08 10:50:13,428 - DEBUG - === NEUE ANFRAGE EMPFANGEN ===
-2025-06-08 10:50:13,428 - DEBUG - Chat-ID: None
-2025-06-08 10:50:13,428 - DEBUG - Anzahl Messages: 1
-2025-06-08 10:50:13,429 - DEBUG - Message 1: Role='user', Content='### Task:
+### Guideli...' (Länge: 2230)
+2025-06-08 17:19:11,728 - INFO - [ZIEL] META-ANFRAGE: '{"title": "Karten in UNO-Spielen", "value": "108"}...'
+2025-06-08 17:19:11,728 - INFO - ========== ENDE DEBUG-EINTRAG 20250608_171911_721 ==========
+2025-06-08 17:19:11,729 - INFO - [DATEI] Meta-Request Debug-Datei erstellt: debug_20250608_171911_721
+2025-06-08 17:19:11,730 - INFO - [OK] Meta-Anfrage erfolgreich verarbeitet: title
+INFO:     127.0.0.1:54662 - "POST /api/chat HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54664 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54665 - "GET /api/ps HTTP/1.1" 200 OK
+2025-06-08 17:19:11,760 - DEBUG - === NEUE ANFRAGE EMPFANGEN ===
+2025-06-08 17:19:11,761 - DEBUG - Chat-ID: None
+2025-06-08 17:19:11,761 - DEBUG - Anzahl Messages: 1
+2025-06-08 17:19:11,762 - DEBUG - Message 1: Role='user', Content='### Task:
 Generate 1-3 broad tags categorizing the main themes of the chat history, along with 1-3 m...'
-2025-06-08 10:50:13,430 - WARNING - [WARNUNG] VERDÄCHTIGE MESSAGE ERKANNT in Message 1: Enthält möglicherweise Tag-Generierung oder andere Prompt-Anweisungen
-2025-06-08 10:50:13,431 - DEBUG - Neue Chat-ID erstellt: 1d30aa43-1d88-4f61-9c46-12e86106238c
-2025-06-08 10:50:13,431 - DEBUG - Chat-History geladen für ID 1d30aa43-1d88-4f61-9c46-12e86106238c: 0 Nachrichten
-2025-06-08 10:50:13,432 - DEBUG - === LETZTE USER-MESSAGE ANALYSE ===
-2025-06-08 10:50:13,432 - DEBUG - Content: '### Task:
+2025-06-08 17:19:11,763 - WARNING - [WARNUNG] VERDÄCHTIGE MESSAGE ERKANNT in Message 1: Enthält möglicherweise Tag-Generierung oder andere Prompt-Anweisungen
+2025-06-08 17:19:11,763 - DEBUG - Neue Chat-ID erstellt: 3576fb51-8498-45c3-a38a-44137bc13530
+2025-06-08 17:19:11,764 - DEBUG - Chat-History geladen für ID 3576fb51-8498-45c3-a38a-44137bc13530: 0 Nachrichten
+2025-06-08 17:19:11,765 - DEBUG - === LETZTE USER-MESSAGE ANALYSE ===
+2025-06-08 17:19:11,765 - DEBUG - Content: '### Task:
 Generate 1-3 broad tags categorizing the main themes of the chat history, along with 1-3 more specific subtopic tags.
 
 ### Guidelines:
@@ -233,63 +251,86 @@ JSON format: { "tags": ["tag1", "tag2", "tag3"] }
 
 ### Chat History:
 <chat_history>
-USER: Was muss man beim Ablegen der Karten geanu beachten, wenn es nur noch Zwei Spieler sind?
-ASSISTANT: Beim Ablegen von Karten bei nur zwei Spielern gilt das folgende:
+USER: welche karten gibt es in UNO?
+ASSISTANT: Es gibt 108 Karten im UNO-Spiel, die je nach Version des Spiels unterschiedlich angeordnet sind. Hier sind alle Karten:
 
-*   Wenn ein Spieler noch zwei Karten auf seiner Hand hat und die anderen beiden Spieler keine Karten ziehen können, muss der Spieler, der zweimal "UNO" rufen sollte (die Zahl einer Karte, die nicht gezogen wurde), 2 Strafkarten vom Kartenspiel abziehen.
+1. **Blitzkarten**:
+ * Joker
+ * Wildkarte (oder Zauberkarte)
+2. **Herstellerkarten**:
+ * Solitaire
+3. **Aktionskarten**:
+ * 4 verschiedene Arten:
+    - Action
+    - Reverse
+    - Skip
+    - Draw Two
+4. **Zugkarten**:
+ * 25 verschiedene Karten, darunter:
+ * Wenn die Karte auf dem Stapel liegt (oder nicht)
+ * Wenn die Karte bei Beginn des Spiels gezogen wird
+5. **Gesichtskarten**:
+ * 22 verschiedenen Karten, darunter:
+ * Die übrigen Karten des Spiels, wie die Blitzkarten, die Herstellerkarten und die Aktionskarten
+6. **Karten, die nicht direkt auf einen anderen können (z.B.) sind:**
+ * Das Stapelkarten (die oberste Karte des Stapels)
+ * Die Gesichtskarten (von denen bereits erwähnt wurden)
 
 **Referenzierte Quellen:**
+(Quelle: UNO Classic Spielanleitung.pdf, Seite: 1)
 (Quelle: UNO Classic Spielanleitung.pdf, Seite: 2)
-(Quelle: UNO Classic Spielanleitung.pdf, Seite: 4)
 </chat_history>'
-2025-06-08 10:50:13,432 - DEBUG - Länge: 1260 Zeichen
-2025-06-08 10:50:13,433 - WARNING - [ZIEL] META-ANFRAGE ERKANNT: title (Confidence: 0.60)
-2025-06-08 10:50:13,433 - INFO - [BLITZ] Umgehung von RAG - Direkte LLM-Verarbeitung
-2025-06-08 10:50:13,433 - INFO - [ZIEL] VERARBEITE META-ANFRAGE: title (Confidence: 0.60)
-2025-06-08 10:50:13,437 - DEBUG - send_request_headers.started request=<Request [b'POST']>
-2025-06-08 10:50:13,438 - DEBUG - send_request_headers.complete
-2025-06-08 10:50:13,438 - DEBUG - send_request_body.started request=<Request [b'POST']>
-2025-06-08 10:50:13,438 - DEBUG - send_request_body.complete
-2025-06-08 10:50:13,438 - DEBUG - receive_response_headers.started request=<Request [b'POST']>
-2025-06-08 10:50:20,579 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Content-Type', b'application/json; charset=utf-8'), (b'Date', b'Sun, 08 Jun 2025 08:50:20 GMT'), (b'Content-Length', b'474')])
-2025-06-08 10:50:20,580 - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
-2025-06-08 10:50:20,580 - DEBUG - receive_response_body.started request=<Request [b'POST']>
-2025-06-08 10:50:20,580 - DEBUG - receive_response_body.complete
-2025-06-08 10:50:20,580 - DEBUG - response_closed.started
-2025-06-08 10:50:20,580 - DEBUG - response_closed.complete
-2025-06-08 10:50:20,580 - DEBUG - [ROBOTER] LLM-Only Antwort: ```json
+2025-06-08 17:19:11,766 - DEBUG - Länge: 1699 Zeichen
+2025-06-08 17:19:11,767 - WARNING - [ZIEL] META-ANFRAGE ERKANNT: title (Confidence: 0.60)
+2025-06-08 17:19:11,768 - INFO - [BLITZ] Umgehung von RAG - Direkte LLM-Verarbeitung
+2025-06-08 17:19:11,768 - INFO - [ZIEL] VERARBEITE META-ANFRAGE: title (Confidence: 0.60)
+2025-06-08 17:19:11,770 - DEBUG - send_request_headers.started request=<Request [b'POST']>
+2025-06-08 17:19:11,771 - DEBUG - send_request_headers.complete
+2025-06-08 17:19:11,771 - DEBUG - send_request_body.started request=<Request [b'POST']>
+2025-06-08 17:19:11,771 - DEBUG - send_request_body.complete
+2025-06-08 17:19:11,772 - DEBUG - receive_response_headers.started request=<Request [b'POST']>
+2025-06-08 17:19:26,677 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Content-Type', b'application/json; charset=utf-8'), (b'Date', b'Sun, 08 Jun 2025 15:19:26 GMT'), (b'Content-Length', b'961')])
+2025-06-08 17:19:26,678 - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2025-06-08 17:19:26,679 - DEBUG - receive_response_body.started request=<Request [b'POST']>
+2025-06-08 17:19:26,679 - DEBUG - receive_response_body.complete
+2025-06-08 17:19:26,679 - DEBUG - response_closed.started
+2025-06-08 17:19:26,680 - DEBUG - response_closed.complete
+2025-06-08 17:19:26,680 - DEBUG - [ROBOTER] LLM-Only Antwort: ### Broad Tags
+```json
 {
     "tags": [
-        "Card Games",
-        "UNO",
-        "Game Rules"
+        "Gaming",
+        "CardGames"
     ]
 }
 ```
 
-## Ge...
-2025-06-08 10:50:20,583 - INFO - ========== DEBUG-EINTRAG 20250608_105020_582 ==========
-2025-06-08 10:50:20,583 - INFO - [SUCHE] EINGEHENDE REQUEST-DATEN: Chat-ID=None, Model=llama3.2:1b
-2025-06-08 10:50:20,583 - INFO - [CONFIG] meta_request_detected: True
-2025-06-08 10:50:20,583 - INFO - [CONFIG] meta_type: title
-2025-06-08 10:50:20,583 - INFO - [CONFIG] meta_confidence: 0.6
-2025-06-08 10:50:20,583 - INFO - [CONFIG] processing_method: LLM-Only (RAG bypassed)
-2025-06-08 10:50:20,583 - INFO - [CONFIG] chat_history_length: 1
-2025-06-08 10:50:20,583 - INFO - [CONFIG] source_nodes_count: 0
-2025-06-08 10:50:20,585 - INFO - [CONFIG] unique_sources_count: 0
-2025-06-08 10:50:20,585 - INFO - [OK] USER-MESSAGE: '### Task:
-Generate 1-3 broad tags categorizing the main themes of the chat history, along with 1-3 m...' (Länge: 1260)
-2025-06-08 10:50:20,585 - INFO - [ZIEL] META-ANFRAGE: '```json
+### More S...
+2025-06-08 17:19:26,681 - INFO - ========== DEBUG-EINTRAG 20250608_171926_681 ==========
+2025-06-08 17:19:26,682 - INFO - [SUCHE] EINGEHENDE REQUEST-DATEN: Chat-ID=None, Model=llama3.2:1b
+2025-06-08 17:19:26,682 - INFO - [CONFIG] meta_request_detected: True
+2025-06-08 17:19:26,682 - INFO - [CONFIG] meta_type: title
+2025-06-08 17:19:26,684 - INFO - [CONFIG] meta_confidence: 0.6
+2025-06-08 17:19:26,684 - INFO - [CONFIG] processing_method: LLM-Only (RAG bypassed)
+2025-06-08 17:19:26,684 - INFO - [CONFIG] chat_history_length: 1
+2025-06-08 17:19:26,684 - INFO - [CONFIG] source_nodes_count: 0
+2025-06-08 17:19:26,685 - INFO - [CONFIG] unique_sources_count: 0
+2025-06-08 17:19:26,685 - INFO - [OK] USER-MESSAGE: '### Task:
+Generate 1-3 broad tags categorizing the main themes of the chat history, along with 1-3 m...' (Länge: 1699)
+2025-06-08 17:19:26,685 - INFO - [ZIEL] META-ANFRAGE: '### Broad Tags
+```json
 {
     "tags": [
-        "Card Games",
-        "UNO",
-        "Game Rules"
+        "Gaming",
+        "CardGames"
     ]
 }
 ```
 
-## Ge...'
-2025-06-08 10:50:20,585 - INFO - ========== ENDE DEBUG-EINTRAG 20250608_105020_582 ==========
-2025-06-08 10:50:20,587 - INFO - [DATEI] Meta-Request Debug-Datei erstellt: debug_20250608_105020_582
-2025-06-08 10:50:20,587 - INFO - [OK] Meta-Anfrage erfolgreich verarbeitet: title
+### More S...'
+2025-06-08 17:19:26,685 - INFO - ========== ENDE DEBUG-EINTRAG 20250608_171926_681 ==========
+2025-06-08 17:19:26,686 - INFO - [DATEI] Meta-Request Debug-Datei erstellt: debug_20250608_171926_681
+2025-06-08 17:19:26,686 - INFO - [OK] Meta-Anfrage erfolgreich verarbeitet: title
+INFO:     127.0.0.1:54667 - "POST /api/chat HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54831 - "GET /api/tags HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54832 - "GET /api/ps HTTP/1.1" 200 OK
