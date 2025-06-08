@@ -168,6 +168,7 @@ def create_enhanced_documents_from_pdf(pdf_path: str) -> List[Document]:
     """
     Erstellt semantisch sinnvolle Dokument-Chunks durch intelligente Gruppierung.
     Kombiniert zusammengehörige PDF-Elemente zu kohärenten Abschnitten.
+    Integriert hierarchische Header-Analyse für reichere Metadaten.
     """
     print(f"[SEMANTIC] Verarbeite {pdf_path} mit semantischer Abschnitts-Gruppierung")
     
@@ -188,13 +189,18 @@ def create_enhanced_documents_from_pdf(pdf_path: str) -> List[Document]:
         print(f"❌ Fehler beim Laden der PDF-Elemente: {str(e)}")
         return []
     
-    # 2. Gruppiere Elemente zu semantischen Abschnitten
+    # 2. Analysiere hierarchische Headers für alle Elemente
+    print(f"[SEMANTIC] Starte hierarchische Header-Analyse für bessere Metadaten...")
+    header_mapping = analyze_hierarchical_headers(elements)
+    
+    # 3. Gruppiere Elemente zu semantischen Abschnitten
     semantic_chunks = []
     current_chunk = ""
     current_section = None
     current_page = None
+    current_element_indices = []  # Verfolge welche Elemente im aktuellen Chunk sind
     
-    for element in elements:
+    for i, element in enumerate(elements):
         element_text = str(element).strip()
         element_type = type(element).__name__
         
@@ -213,17 +219,20 @@ def create_enhanced_documents_from_pdf(pdf_path: str) -> List[Document]:
                     'text': current_chunk.strip(),
                     'section': current_section or "Unnamed Section",
                     'page_number': current_page,
-                    'length': len(current_chunk.strip())
+                    'length': len(current_chunk.strip()),
+                    'element_indices': current_element_indices.copy()  # Kopiere die Element-Indices
                 })
             
             # Starte neuen Chunk
             current_section = element_text
             current_page = page_number
             current_chunk = element_text + "\n\n"
+            current_element_indices = [i]  # Neuer Chunk startet mit diesem Element
         else:
             # Füge zum aktuellen Chunk hinzu
             if element_text and len(element_text.strip()) > 2:
                 current_chunk += element_text + " "
+                current_element_indices.append(i)  # Verfolge dieses Element
                 # Update page number if available
                 if page_number and not current_page:
                     current_page = page_number
@@ -234,14 +243,16 @@ def create_enhanced_documents_from_pdf(pdf_path: str) -> List[Document]:
             'text': current_chunk.strip(),
             'section': current_section or "Final Section",
             'page_number': current_page,
-            'length': len(current_chunk.strip())
+            'length': len(current_chunk.strip()),
+            'element_indices': current_element_indices.copy()
         })
     
-    # 3. Konvertiere zu LlamaIndex Documents
+    # 4. Konvertiere zu LlamaIndex Documents mit erweiterten Header-Metadaten
     documents = []
     filename = os.path.basename(pdf_path)
     
     for i, chunk in enumerate(semantic_chunks):
+        # Basis-Metadaten
         metadata = {
             "file_path": pdf_path,
             "file_directory": os.path.dirname(pdf_path),
@@ -255,6 +266,56 @@ def create_enhanced_documents_from_pdf(pdf_path: str) -> List[Document]:
         if chunk['page_number'] is not None:
             metadata["page_number"] = chunk['page_number']
         
+        # Integriere hierarchische Header-Metadaten aus dem Chunk
+        # Sammle alle Header-Informationen der Elemente in diesem Chunk
+        chunk_header_info = {
+            'section_h1': None,
+            'section_h2': None, 
+            'section_h3': None,
+            'current_section': None,
+            'header_elements': []
+        }
+        
+        for element_idx in chunk['element_indices']:
+            if element_idx in header_mapping:
+                element_headers = header_mapping[element_idx]
+                
+                # Sammle Header-Informationen (verwende die letzten gefundenen)
+                if element_headers.get('section_h1'):
+                    chunk_header_info['section_h1'] = element_headers['section_h1']
+                if element_headers.get('section_h2'):
+                    chunk_header_info['section_h2'] = element_headers['section_h2']
+                if element_headers.get('section_h3'):
+                    chunk_header_info['section_h3'] = element_headers['section_h3']
+                if element_headers.get('current_section'):
+                    chunk_header_info['current_section'] = element_headers['current_section']
+                
+                # Sammle Header-Elemente
+                if element_headers.get('is_header'):
+                    chunk_header_info['header_elements'].append({
+                        'text': str(elements[element_idx]).strip(),
+                        'type': element_headers.get('element_type'),
+                        'index': element_idx
+                    })
+        
+        # Füge Header-Metadaten zu den Dokument-Metadaten hinzu
+        if chunk_header_info['section_h1']:
+            metadata['section_h1'] = chunk_header_info['section_h1']
+        if chunk_header_info['section_h2']:
+            metadata['section_h2'] = chunk_header_info['section_h2']
+        if chunk_header_info['section_h3']:
+            metadata['section_h3'] = chunk_header_info['section_h3']
+        if chunk_header_info['current_section']:
+            metadata['current_section'] = chunk_header_info['current_section']
+        
+        # Zusätzliche Header-Statistiken
+        metadata['header_count'] = len(chunk_header_info['header_elements'])
+        if chunk_header_info['header_elements']:
+            metadata['contains_headers'] = True
+            metadata['first_header'] = chunk_header_info['header_elements'][0]['text']
+        else:
+            metadata['contains_headers'] = False
+        
         document = Document(
             text=chunk['text'],
             metadata=metadata
@@ -264,6 +325,14 @@ def create_enhanced_documents_from_pdf(pdf_path: str) -> List[Document]:
     print(f"[SEMANTIC] {len(semantic_chunks)} semantische Abschnitte erstellt:")
     for i, chunk in enumerate(semantic_chunks):
         print(f"  - Abschnitt {i+1}: '{chunk['section']}' ({chunk['length']} Zeichen)")
+    
+    # Zeige Header-Analyse Zusammenfassung
+    header_enriched_chunks = [d for d in documents if d.metadata.get('contains_headers')]
+    print(f"[HEADER] Header-Integration erfolgreich:")
+    print(f"  - Chunks mit Header-Metadaten: {len(header_enriched_chunks)}/{len(documents)}")
+    print(f"  - H1-Überschriften gefunden: {len(set(d.metadata.get('section_h1') for d in documents if d.metadata.get('section_h1')))}")
+    print(f"  - H2-Überschriften gefunden: {len(set(d.metadata.get('section_h2') for d in documents if d.metadata.get('section_h2')))}")
+    print(f"  - H3-Überschriften gefunden: {len(set(d.metadata.get('section_h3') for d in documents if d.metadata.get('section_h3')))}")
     
     return documents
 

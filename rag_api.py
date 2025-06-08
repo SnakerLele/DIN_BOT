@@ -72,6 +72,153 @@ def create_sentence_window_postprocessor():
         target_metadata_key="window"  # Verwendet das window-Feld aus SentenceWindowNodeParser
     )
 
+# Neue Hilfsfunktionen für Header-Analyse und Qualitätsbewertung
+def analyze_chunk_headers(metadata: dict) -> dict:
+    """
+    Analysiert die Header-Struktur eines Chunks basierend auf Metadaten.
+    
+    Args:
+        metadata: Metadaten des Chunks
+        
+    Returns:
+        dict: Header-Analyse mit Qualitätsbewertung und Hierarchie-Information
+    """
+    headers = {}
+    hierarchy_level = 0
+    section_path_parts = []
+    
+    # Extrahiere verfügbare Header
+    for level in ['section_h1', 'section_h2', 'section_h3']:
+        if level in metadata and metadata[level]:
+            headers[level] = metadata[level]
+            hierarchy_level += 1
+            section_path_parts.append(metadata[level])
+    
+    # Aktuelle Sektion hinzufügen falls verfügbar und anders
+    current_section = metadata.get('current_section')
+    if current_section and current_section not in section_path_parts:
+        section_path_parts.append(current_section)
+    
+    # Erstelle Abschnitts-Pfad
+    section_path = " → ".join(section_path_parts) if section_path_parts else None
+    
+    # Bewerte Header-Qualität
+    if hierarchy_level >= 2:
+        quality = "EXCELLENT"  # Mehrere Hierarchie-Ebenen
+    elif hierarchy_level == 1:
+        quality = "GOOD"       # Eine Hierarchie-Ebene
+    elif current_section:
+        quality = "FAIR"       # Nur current_section verfügbar
+    else:
+        quality = "POOR"       # Keine Header-Information
+    
+    return {
+        'headers': headers,
+        'hierarchy_level': hierarchy_level,
+        'section_path': section_path,
+        'current_section': current_section,
+        'quality': quality,
+        'contains_headers': metadata.get('contains_headers', False)
+    }
+
+def evaluate_chunk_quality(score: float, header_info: dict, content_length: int) -> dict:
+    """
+    Bewertet die Gesamtqualität eines Chunks basierend auf Score, Headers und Content.
+    
+    Args:
+        score: Similarity Score des Chunks
+        header_info: Header-Analyse Ergebnisse
+        content_length: Länge des Chunk-Textes
+        
+    Returns:
+        dict: Qualitätsbewertung mit Details
+    """
+    # Score-Qualität (ChromaDB verwendet Cosine Distance - niedriger = besser)
+    if score <= 4.0:
+        score_quality = "EXCELLENT"
+    elif score <= 5.5:
+        score_quality = "GOOD"
+    elif score <= 7.0:
+        score_quality = "FAIR"
+    else:
+        score_quality = "POOR"
+    
+    # Header-Qualität aus Header-Analyse übernehmen
+    header_quality = header_info['quality']
+    
+    # Content-Qualität basierend auf Länge
+    if content_length >= 500:
+        content_quality = "EXCELLENT"  # Ausführlicher Inhalt
+    elif content_length >= 200:
+        content_quality = "GOOD"       # Moderate Länge
+    elif content_length >= 50:
+        content_quality = "FAIR"       # Kurzer Inhalt
+    else:
+        content_quality = "POOR"       # Sehr kurzer Inhalt
+    
+    # Gesamt-Qualität berechnen (gewichtete Bewertung)
+    quality_scores = {
+        "EXCELLENT": 4,
+        "GOOD": 3,
+        "FAIR": 2,
+        "POOR": 1
+    }
+    
+    # Gewichtung: Score 50%, Header 30%, Content 20%
+    weighted_score = (
+        quality_scores[score_quality] * 0.5 +
+        quality_scores[header_quality] * 0.3 +
+        quality_scores[content_quality] * 0.2
+    )
+    
+    if weighted_score >= 3.5:
+        overall = "EXCELLENT"
+    elif weighted_score >= 2.5:
+        overall = "GOOD"
+    elif weighted_score >= 1.5:
+        overall = "FAIR"
+    else:
+        overall = "POOR"
+    
+    return {
+        'overall': overall,
+        'score_quality': score_quality,
+        'header_quality': header_quality,
+        'content_quality': content_quality,
+        'weighted_score': weighted_score
+    }
+
+def create_enhanced_source_reference(metadata: dict) -> str:
+    """
+    Erstellt erweiterte Quellenangaben basierend auf Header-Hierarchie.
+    
+    Args:
+        metadata: Metadaten des Source-Nodes
+        
+    Returns:
+        str: Formatierte Quellenangabe mit Abschnitts-Information
+    """
+    filename = metadata.get('filename', 'Unbekanntes Dokument')
+    page_number = metadata.get('page_number', 'N/A')
+    
+    # Erstelle Abschnitts-Pfad
+    section_parts = []
+    for level in ['section_h1', 'section_h2', 'section_h3']:
+        if level in metadata and metadata[level]:
+            section_parts.append(metadata[level])
+    
+    # Falls current_section anders ist, als letztes Element hinzufügen
+    current_section = metadata.get('current_section')
+    if current_section and (not section_parts or current_section != section_parts[-1]):
+        section_parts.append(current_section)
+    
+    if section_parts:
+        section_path = " → ".join(section_parts)
+        return f'(Abschnitt: "{section_path}", Quelle: {filename}, Seite: {page_number})'
+    else:
+        # Fallback auf traditionelles Format
+        return f'(Quelle: {filename}, Seite: {page_number})'
+
 # 3. Initialisierung (wird nur beim Serverstart ausgeführt)
 logger.debug("Starte Initialisierung der API-Komponenten...")
 try:
@@ -146,11 +293,16 @@ WICHTIGE ANWEISUNGEN für deine Antworten:
 
 3. **Umgang mit unzureichenden Informationen:** Wenn die bereitgestellten Textabschnitte die Frage nicht oder nicht vollständig beantworten können, gib dies klar an (z.B. "Basierend auf den vorliegenden Informationen kann ich diese Frage nicht beantworten." oder "Die bereitgestellten Informationen enthalten keine Antwort auf [spezifischer Teil der Frage]."). Erfinde keine Antworten.
 
-4. **Quellenangabe:** Nenne am Ende deiner Antwort *immer* das Quelldokument und die Seitenzahl für jeden relevanten Textabschnitt, aus dem du Informationen entnommen hast, sofern diese Metadaten verfügbar sind. Nutze ein klares Format, z.B.: (Quelle: [Dokumentname], Seite: [Seitenzahl])
+4. **Erweiterte Quellenangabe:** Nutze die verfügbaren Überschriften-Informationen für präzise und benutzerfreundliche Quellenangaben. Verwende folgende Formate:
+   - Bei Hauptabschnitten: (Abschnitt: "[Hauptüberschrift]", Quelle: [Datei], Seite: [Nummer])
+   - Bei Unterabschnitten: (Abschnitt: "[Hauptüberschrift] → [Unterüberschrift]", Quelle: [Datei], Seite: [Nummer])
+   - Beispiel: (Abschnitt: "Vorbereitung des Spiels → Das Spiel", Quelle: monopoly.pdf, Seite: 1)
 
-5. **Sprache:** Antworte immer auf Deutsch.
+5. **Thematische Strukturierung:** Strukturiere deine Antwort nach den identifizierten Abschnitten und nutze die Überschriften-Hierarchie für eine logische Gliederung.
 
-HINWEIS: Du erhältst bereits optimierte Textabschnitte mit erweitertem Kontext durch das Sentence-Window-System. Diese enthalten sowohl den relevanten Satz als auch den umgebenden Kontext für besseres Verständnis.
+6. **Sprache:** Antworte immer auf Deutsch.
+
+HINWEIS: Du erhältst semantisch optimierte Textabschnitte mit hierarchischen Überschriften-Metadaten. Diese enthalten sowohl den relevanten Inhalt als auch klare thematische Zuordnungen für besseres Verständnis.
 
 Beginne jetzt mit der Beantwortung der Frage.""",
         similarity_top_k=4  # Optimiert für sentence-basierte Chunks
@@ -610,19 +762,43 @@ async def chat_completions(request: ChatRequest):
                     rag_logger.info(f"│  [STERN] Similarity Score: {score:.6f}")
                     rag_logger.info(f"│  [ID] Node ID: {node.node_id if hasattr(node, 'node_id') else 'N/A'}")
                     
-                    # Sentence-Window spezifische Analyse
-                    has_window = 'window' in node.metadata if hasattr(node, 'metadata') and node.metadata else False
-                    has_original = 'original_sentence' in node.metadata if hasattr(node, 'metadata') and node.metadata else False
-                    rag_logger.info(f"│  [OPTIMIERUNG] Sentence-Window Metadaten:")
-                    rag_logger.info(f"│     Window verfügbar: {'[JA]' if has_window else '[NEIN]'}")
-                    rag_logger.info(f"│     Original-Satz verfügbar: {'[JA]' if has_original else '[NEIN]'}")
+                    # NEUE: Header-Hierarchie Analyse
+                    metadata = node.metadata if hasattr(node, 'metadata') and node.metadata else {}
+                    header_info = analyze_chunk_headers(metadata)
                     
-                    if has_window and node.metadata['window']:
-                        window_length = len(node.metadata['window'])
-                        original_length = len(node.metadata.get('original_sentence', ''))
-                        rag_logger.info(f"│     Window-Länge: {window_length} Zeichen")
-                        rag_logger.info(f"│     Original-Länge: {original_length} Zeichen")
-                        rag_logger.info(f"│     Kontext-Erweiterung: {window_length - original_length:+d} Zeichen")
+                    rag_logger.info(f"├─ [🎯] HEADER-STRUKTUR:")
+                    rag_logger.info(f"│  [QUALITÄT] Header-Qualität: {header_info['quality']}")
+                    rag_logger.info(f"│  [STRUKTUR] Hierarchie-Level: {header_info['hierarchy_level']}")
+                    
+                    if header_info['section_path']:
+                        rag_logger.info(f"│  [PFAD] Abschnitts-Pfad: {header_info['section_path']}")
+                    
+                    if header_info['headers']:
+                        rag_logger.info(f"│  [TITEL] Verfügbare Überschriften:")
+                        for level, title in header_info['headers'].items():
+                            rag_logger.info(f"│     {level}: {title}")
+                    
+                    # Erweiterte Chunk-Qualitätsbewertung
+                    chunk_quality = evaluate_chunk_quality(score, header_info, len(node.text))
+                    rag_logger.info(f"│  [BEWERTUNG] Gesamt-Chunk-Qualität: {chunk_quality['overall']}")
+                    rag_logger.info(f"│     Score-Qualität: {chunk_quality['score_quality']}")
+                    rag_logger.info(f"│     Header-Qualität: {chunk_quality['header_quality']}")
+                    rag_logger.info(f"│     Content-Qualität: {chunk_quality['content_quality']}")
+                    
+                    # Sentence-Window spezifische Analyse (falls vorhanden)
+                    has_window = 'window' in metadata
+                    has_original = 'original_sentence' in metadata
+                    if has_window or has_original:
+                        rag_logger.info(f"├─ [OPTIMIERUNG] Sentence-Window Metadaten:")
+                        rag_logger.info(f"│     Window verfügbar: {'[JA]' if has_window else '[NEIN]'}")
+                        rag_logger.info(f"│     Original-Satz verfügbar: {'[JA]' if has_original else '[NEIN]'}")
+                        
+                        if has_window and metadata['window']:
+                            window_length = len(metadata['window'])
+                            original_length = len(metadata.get('original_sentence', ''))
+                            rag_logger.info(f"│     Window-Länge: {window_length} Zeichen")
+                            rag_logger.info(f"│     Original-Länge: {original_length} Zeichen")
+                            rag_logger.info(f"│     Kontext-Erweiterung: {window_length - original_length:+d} Zeichen")
                     
                     # Vollständige Metadaten loggen
                     if hasattr(node, 'metadata') and node.metadata:
@@ -675,37 +851,80 @@ async def chat_completions(request: ChatRequest):
                         f"Node ID='{node.node_id if hasattr(node, 'node_id') else 'N/A'}', "
                         f"Text (Vorschau)='{node.text[:70].replace('\n', ' ')}...'"
                     )
-                    unique_source_strings.add(f"(Quelle: {file_name}, Seite: {page_number})")
+                    # Verwende erweiterte Quellenangabe mit Header-Information
+                    enhanced_source = create_enhanced_source_reference(node.metadata)
+                    unique_source_strings.add(enhanced_source)
                 
-                # Zusammenfassung der Chunks
-                rag_logger.info(f"\n[STATISTIK] CHUNK-ZUSAMMENFASSUNG:")
+                # Erweiterte Chunk-Zusammenfassungs-Analyse mit Header-Statistiken
+                rag_logger.info(f"\n[STATISTIK] ERWEITERTE CHUNK-ZUSAMMENFASSUNG:")
                 rag_logger.info(f"├─ Gesamtanzahl Chunks: {len(source_nodes)}")
                 
                 total_chars = sum(len(node.text) for node in source_nodes)
                 rag_logger.info(f"├─ Gesamtzeichen aller Chunks: {total_chars}")
                 rag_logger.info(f"├─ Durchschnittliche Chunk-Größe: {total_chars // len(source_nodes)} Zeichen")
                 
+                # Header-Qualitäts-Statistiken
+                header_qualities = []
+                overall_qualities = []
+                sections_found = set()
+                hierarchies_found = set()
+                
+                for node in source_nodes:
+                    metadata = node.metadata if hasattr(node, 'metadata') and node.metadata else {}
+                    header_info = analyze_chunk_headers(metadata)
+                    chunk_quality = evaluate_chunk_quality(node.score if hasattr(node, 'score') else 10.0, header_info, len(node.text))
+                    
+                    header_qualities.append(header_info['quality'])
+                    overall_qualities.append(chunk_quality['overall'])
+                    
+                    if header_info['section_path']:
+                        sections_found.add(header_info['section_path'])
+                    if header_info['hierarchy_level'] > 0:
+                        hierarchies_found.add(header_info['hierarchy_level'])
+                
+                rag_logger.info(f"\n[🎯] HEADER-QUALITÄTS-ANALYSE:")
+                from collections import Counter
+                header_quality_counts = Counter(header_qualities)
+                for quality, count in header_quality_counts.most_common():
+                    percentage = (count / len(source_nodes)) * 100
+                    rag_logger.info(f"├─ {quality} Header-Qualität: {count} Chunks ({percentage:.1f}%)")
+                
+                rag_logger.info(f"\n[🏆] GESAMT-QUALITÄTS-ANALYSE:")
+                overall_quality_counts = Counter(overall_qualities)
+                for quality, count in overall_quality_counts.most_common():
+                    percentage = (count / len(source_nodes)) * 100
+                    rag_logger.info(f"├─ {quality} Gesamt-Qualität: {count} Chunks ({percentage:.1f}%)")
+                
+                if sections_found:
+                    rag_logger.info(f"\n[📚] ABSCHNITTS-ABDECKUNG:")
+                    rag_logger.info(f"├─ Anzahl verschiedene Abschnitte: {len(sections_found)}")
+                    for section in sorted(sections_found):
+                        rag_logger.info(f"│   - {section}")
+                
+                if hierarchies_found:
+                    rag_logger.info(f"├─ Hierarchie-Level gefunden: {sorted(hierarchies_found)}")
+                
                 scores = [node.score for node in source_nodes if hasattr(node, 'score')]
                 if scores:
+                    rag_logger.info(f"\n[📊] SCORE-STATISTIKEN:")
                     rag_logger.info(f"├─ Höchster Score: {max(scores):.6f}")
                     rag_logger.info(f"├─ Niedrigster Score: {min(scores):.6f}")
                     rag_logger.info(f"├─ Durchschnittlicher Score: {sum(scores)/len(scores):.6f}")
                     
-                    # Score-Qualitäts-Analyse
-                    rag_logger.info(f"\n[ZIEL] SCORE-QUALITÄTS-ANALYSE:")
-                    excellent_threshold = 0.8
-                    good_threshold = 0.6
-                    poor_threshold = 0.3
+                    # Erweiterte Score-Qualitäts-Analyse (angepasst für ChromaDB Cosine Distance)
+                    excellent_threshold = 4.0  # Angepasst für Cosine Distance
+                    good_threshold = 5.5
+                    fair_threshold = 7.0
                     
-                    excellent = [s for s in scores if s >= excellent_threshold]
-                    good = [s for s in scores if good_threshold <= s < excellent_threshold]
-                    fair = [s for s in scores if poor_threshold <= s < good_threshold]
-                    poor = [s for s in scores if s < poor_threshold]
+                    excellent = [s for s in scores if s <= excellent_threshold]
+                    good = [s for s in scores if excellent_threshold < s <= good_threshold]
+                    fair = [s for s in scores if good_threshold < s <= fair_threshold]
+                    poor = [s for s in scores if s > fair_threshold]
                     
-                    rag_logger.info(f"├─ Exzellente Matches (≥{excellent_threshold}): {len(excellent)}")
-                    rag_logger.info(f"├─ Gute Matches ({good_threshold}-{excellent_threshold}): {len(good)}")
-                    rag_logger.info(f"├─ Mittelmäßige Matches ({poor_threshold}-{good_threshold}): {len(fair)}")
-                    rag_logger.info(f"└─ Schlechte Matches (<{poor_threshold}): {len(poor)}")
+                    rag_logger.info(f"├─ Exzellente Matches (≤{excellent_threshold}): {len(excellent)}")
+                    rag_logger.info(f"├─ Gute Matches ({excellent_threshold}-{good_threshold}): {len(good)}")
+                    rag_logger.info(f"├─ Mittelmäßige Matches ({good_threshold}-{fair_threshold}): {len(fair)}")
+                    rag_logger.info(f"└─ Schlechte Matches (>{fair_threshold}): {len(poor)}")
                     
                     if len(poor) == len(scores):
                         rag_logger.warning("[KRITISCH] ACHTUNG: Alle Chunks haben schlechte Similarity-Scores!")
@@ -717,8 +936,11 @@ async def chat_completions(request: ChatRequest):
                     elif len(excellent) == 0 and len(good) == 0:
                         rag_logger.warning("[WARNUNG] Warnung: Keine guten Matches gefunden!")
                         rag_logger.warning("Die gefundenen Chunks sind möglicherweise nicht relevant.")
+                    else:
+                        rag_logger.info(f"[OK] Qualitäts-Mix: {len(excellent + good)} gute von {len(scores)} Chunks")
                 
                 unique_files = set(node.metadata.get('filename', 'Unbekannt') for node in source_nodes)
+                rag_logger.info(f"\n[📁] DATEI-VERTEILUNG:")
                 rag_logger.info(f"├─ Anzahl verschiedener Dateien: {len(unique_files)}")
                 rag_logger.info(f"└─ Dateien: {', '.join(unique_files)}")
                 
