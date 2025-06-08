@@ -1,17 +1,17 @@
-2025-06-08 10:50:13,427 - INFO - ============================================================
-2025-06-08 10:50:13,427 - INFO - NEUE RAG-ANFRAGE GESTARTET
-2025-06-08 10:50:13,427 - INFO - ============================================================
-2025-06-08 10:50:13,427 - INFO - Zeitstempel: 2025-06-08 10:50:13
-2025-06-08 10:50:13,428 - INFO - Chat-ID: None
-2025-06-08 10:50:13,428 - INFO - Model: llama3.2:1b
-2025-06-08 10:50:13,428 - INFO - Temperature: 0.7
-2025-06-08 10:50:13,428 - INFO - Max Tokens: 1000
-2025-06-08 10:50:13,428 - INFO - Anzahl eingehender Messages: 1
-2025-06-08 10:50:13,429 - INFO - 
+2025-06-08 17:19:11,759 - INFO - ============================================================
+2025-06-08 17:19:11,759 - INFO - NEUE RAG-ANFRAGE GESTARTET
+2025-06-08 17:19:11,759 - INFO - ============================================================
+2025-06-08 17:19:11,760 - INFO - Zeitstempel: 2025-06-08 17:19:11
+2025-06-08 17:19:11,760 - INFO - Chat-ID: None
+2025-06-08 17:19:11,760 - INFO - Model: llama3.2:1b
+2025-06-08 17:19:11,760 - INFO - Temperature: 0.7
+2025-06-08 17:19:11,760 - INFO - Max Tokens: 1000
+2025-06-08 17:19:11,760 - INFO - Anzahl eingehender Messages: 1
+2025-06-08 17:19:11,761 - INFO - 
 --- EINGEHENDE MESSAGES ---
-2025-06-08 10:50:13,429 - INFO - Message 1:
-2025-06-08 10:50:13,429 - INFO -   Role: user
-2025-06-08 10:50:13,429 - INFO -   Content: ### Task:
+2025-06-08 17:19:11,761 - INFO - Message 1:
+2025-06-08 17:19:11,762 - INFO -   Role: user
+2025-06-08 17:19:11,762 - INFO -   Content: ### Task:
 Generate 1-3 broad tags categorizing the main themes of the chat history, along with 1-3 more specific subtopic tags.
 
 ### Guidelines:
@@ -26,26 +26,46 @@ JSON format: { "tags": ["tag1", "tag2", "tag3"] }
 
 ### Chat History:
 <chat_history>
-USER: Was muss man beim Ablegen der Karten geanu beachten, wenn es nur noch Zwei Spieler sind?
-ASSISTANT: Beim Ablegen von Karten bei nur zwei Spielern gilt das folgende:
+USER: welche karten gibt es in UNO?
+ASSISTANT: Es gibt 108 Karten im UNO-Spiel, die je nach Version des Spiels unterschiedlich angeordnet sind. Hier sind alle Karten:
 
-*   Wenn ein Spieler noch zwei Karten auf seiner Hand hat und die anderen beiden Spieler keine Karten ziehen können, muss der Spieler, der zweimal "UNO" rufen sollte (die Zahl einer Karte, die nicht gezogen wurde), 2 Strafkarten vom Kartenspiel abziehen.
+1. **Blitzkarten**:
+ * Joker
+ * Wildkarte (oder Zauberkarte)
+2. **Herstellerkarten**:
+ * Solitaire
+3. **Aktionskarten**:
+ * 4 verschiedene Arten: 
+    - Action
+    - Reverse
+    - Skip
+    - Draw Two
+4. **Zugkarten**:
+ * 25 verschiedene Karten, darunter:
+ * Wenn die Karte auf dem Stapel liegt (oder nicht)
+ * Wenn die Karte bei Beginn des Spiels gezogen wird
+5. **Gesichtskarten**:
+ * 22 verschiedenen Karten, darunter:
+ * Die übrigen Karten des Spiels, wie die Blitzkarten, die Herstellerkarten und die Aktionskarten
+6. **Karten, die nicht direkt auf einen anderen können (z.B.) sind:**
+ * Das Stapelkarten (die oberste Karte des Stapels)
+ * Die Gesichtskarten (von denen bereits erwähnt wurden)
 
 **Referenzierte Quellen:**
+(Quelle: UNO Classic Spielanleitung.pdf, Seite: 1)
 (Quelle: UNO Classic Spielanleitung.pdf, Seite: 2)
-(Quelle: UNO Classic Spielanleitung.pdf, Seite: 4)
 </chat_history>
-2025-06-08 10:50:13,429 - INFO -   Länge: 1260 Zeichen
-2025-06-08 10:50:13,430 - WARNING - [WARNUNG] VERDÄCHTIGE MESSAGE ERKANNT in Message 1: Enthält möglicherweise Tag-Generierung oder andere Prompt-Anweisungen
-2025-06-08 10:50:13,430 - INFO - 
+2025-06-08 17:19:11,762 - INFO -   Länge: 1699 Zeichen
+2025-06-08 17:19:11,763 - WARNING - [WARNUNG] VERDÄCHTIGE MESSAGE ERKANNT in Message 1: Enthält möglicherweise Tag-Generierung oder andere Prompt-Anweisungen
+2025-06-08 17:19:11,763 - INFO - 
 --- CHAT-SESSION VERWALTUNG ---
-2025-06-08 10:50:13,430 - INFO - Neue Chat-ID erstellt: 1d30aa43-1d88-4f61-9c46-12e86106238c
-2025-06-08 10:50:13,431 - INFO - Chat-History geladen: 0 vorherige Nachrichten
-2025-06-08 10:50:13,431 - INFO - 
+2025-06-08 17:19:11,763 - INFO - Neue Chat-ID erstellt: 3576fb51-8498-45c3-a38a-44137bc13530
+2025-06-08 17:19:11,764 - INFO - Chat-History geladen: 0 vorherige Nachrichten
+2025-06-08 17:19:11,764 - INFO - 
 --- USER-MESSAGE ANALYSE ---
-2025-06-08 10:50:13,431 - INFO - Anzahl User-Messages gefunden: 1
-2025-06-08 10:50:13,431 - INFO - Letzte User-Message:
-2025-06-08 10:50:13,431 - INFO -   Content: ### Task:
+2025-06-08 17:19:11,764 - INFO - Anzahl User-Messages gefunden: 1
+2025-06-08 17:19:11,764 - INFO - Letzte User-Message:
+2025-06-08 17:19:11,765 - INFO -   Content: ### Task:
 Generate 1-3 broad tags categorizing the main themes of the chat history, along with 1-3 more specific subtopic tags.
 
 ### Guidelines:
@@ -60,43 +80,75 @@ JSON format: { "tags": ["tag1", "tag2", "tag3"] }
 
 ### Chat History:
 <chat_history>
-USER: Was muss man beim Ablegen der Karten geanu beachten, wenn es nur noch Zwei Spieler sind?
-ASSISTANT: Beim Ablegen von Karten bei nur zwei Spielern gilt das folgende:
+USER: welche karten gibt es in UNO?
+ASSISTANT: Es gibt 108 Karten im UNO-Spiel, die je nach Version des Spiels unterschiedlich angeordnet sind. Hier sind alle Karten:
 
-*   Wenn ein Spieler noch zwei Karten auf seiner Hand hat und die anderen beiden Spieler keine Karten ziehen können, muss der Spieler, der zweimal "UNO" rufen sollte (die Zahl einer Karte, die nicht gezogen wurde), 2 Strafkarten vom Kartenspiel abziehen.
+1. **Blitzkarten**:
+ * Joker
+ * Wildkarte (oder Zauberkarte)
+2. **Herstellerkarten**:
+ * Solitaire
+3. **Aktionskarten**:
+ * 4 verschiedene Arten: 
+    - Action
+    - Reverse
+    - Skip
+    - Draw Two
+4. **Zugkarten**:
+ * 25 verschiedene Karten, darunter:
+ * Wenn die Karte auf dem Stapel liegt (oder nicht)
+ * Wenn die Karte bei Beginn des Spiels gezogen wird
+5. **Gesichtskarten**:
+ * 22 verschiedenen Karten, darunter:
+ * Die übrigen Karten des Spiels, wie die Blitzkarten, die Herstellerkarten und die Aktionskarten
+6. **Karten, die nicht direkt auf einen anderen können (z.B.) sind:**
+ * Das Stapelkarten (die oberste Karte des Stapels)
+ * Die Gesichtskarten (von denen bereits erwähnt wurden)
 
 **Referenzierte Quellen:**
+(Quelle: UNO Classic Spielanleitung.pdf, Seite: 1)
 (Quelle: UNO Classic Spielanleitung.pdf, Seite: 2)
-(Quelle: UNO Classic Spielanleitung.pdf, Seite: 4)
 </chat_history>
-2025-06-08 10:50:13,431 - INFO -   Länge: 1260 Zeichen
-2025-06-08 10:50:13,432 - INFO - 
+2025-06-08 17:19:11,765 - INFO -   Länge: 1699 Zeichen
+2025-06-08 17:19:11,766 - INFO - 
 --- META-ANFRAGE ERKENNUNG ---
-2025-06-08 10:50:13,433 - INFO - Meta-Anfrage erkannt: True
-2025-06-08 10:50:13,433 - INFO - Meta-Type: title
-2025-06-08 10:50:13,433 - INFO - Confidence: 0.60
-2025-06-08 10:50:13,433 - WARNING - [ZIEL] META-ANFRAGE ERKANNT: title (Confidence: 0.60)
-2025-06-08 10:50:13,433 - INFO - [BLITZ] Umgehung von RAG - Direkte LLM-Verarbeitung
-2025-06-08 10:50:13,433 - INFO - 
+2025-06-08 17:19:11,766 - INFO - Meta-Anfrage erkannt: True
+2025-06-08 17:19:11,766 - INFO - Meta-Type: title
+2025-06-08 17:19:11,767 - INFO - Confidence: 0.60
+2025-06-08 17:19:11,767 - WARNING - [ZIEL] META-ANFRAGE ERKANNT: title (Confidence: 0.60)
+2025-06-08 17:19:11,767 - INFO - [BLITZ] Umgehung von RAG - Direkte LLM-Verarbeitung
+2025-06-08 17:19:11,768 - INFO - 
 --- META-ANFRAGE VERARBEITUNG ---
-2025-06-08 10:50:13,433 - INFO - Starte direkte LLM-Verarbeitung ohne RAG...
-2025-06-08 10:50:20,582 - INFO - LLM-Response erhalten: ```json
+2025-06-08 17:19:11,768 - INFO - Starte direkte LLM-Verarbeitung ohne RAG...
+2025-06-08 17:19:26,681 - INFO - LLM-Response erhalten: ### Broad Tags
+```json
 {
     "tags": [
-        "Card Games",
-        "UNO",
-        "Game Rules"
+        "Gaming",
+        "CardGames"
     ]
 }
 ```
 
-## Generelle Themen:
+### More Specific Subtopic Tags
 
-*   Card Games
-*   UNO
-*   Game Rules
-2025-06-08 10:50:20,587 - INFO - [DATEI] Meta-Request Debug-Datei erstellt: debug_20250608_105020_582
-2025-06-08 10:50:20,587 - INFO - [OK] Meta-Anfrage erfolgreich verarbeitet: title
-2025-06-08 10:50:20,587 - INFO - ============================================================
-2025-06-08 10:50:20,587 - INFO - RAG-ANFRAGE ABGESCHLOSSEN (META-REQUEST)
-2025-06-08 10:50:20,587 - INFO - ============================================================
+**Tag 1: Card Game Mechanics**
+
+* **Blitzkarten**: Joker, Wildkarte (oder Zauberkarte)
+* **Herstellerkarten**: Solitaire
+* **Aktionskarten**: Action, Reverse, Skip, Draw Two
+* **Zugkarten**: 25 verschiedene Karten
+
+**Tag 2: Gameplay**
+
+* **Kartenordnung**: je nach Version des Spiels unterschiedlich angeordnet
+* **Zugkartenregeln**: 4 verschiedene Arten (Action, Reverse, Skip, Draw Two)
+
+**Tag 3: General Information**
+
+* **UNO-Spielanleitung**: Quelle: UNO Classic Spielanleitung.pdf, Seite: 1, Seite: 2
+2025-06-08 17:19:26,686 - INFO - [DATEI] Meta-Request Debug-Datei erstellt: debug_20250608_171926_681
+2025-06-08 17:19:26,686 - INFO - [OK] Meta-Anfrage erfolgreich verarbeitet: title
+2025-06-08 17:19:26,686 - INFO - ============================================================
+2025-06-08 17:19:26,686 - INFO - RAG-ANFRAGE ABGESCHLOSSEN (META-REQUEST)
+2025-06-08 17:19:26,686 - INFO - ============================================================

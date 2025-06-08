@@ -31,48 +31,65 @@ logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 
-def check_embedding_requirements():
-    """Prüft, ob alle erforderlichen Bibliotheken für das Embedding-Modell installiert sind."""
-    print("\n===== EMBEDDING REQUIREMENTS =====")
+def check_qwen_requirements():
+    """Prüft, ob alle erforderlichen Bibliotheken für Qwen3-Embedding installiert sind."""
+    print("\n===== QWEN3-EMBEDDING REQUIREMENTS =====")
     
     requirements_ok = True
     
-    # Prüfe sentence-transformers
+    # Prüfe sentence-transformers Version
     try:
         import sentence_transformers
         version = sentence_transformers.__version__
         print(f"✓ sentence-transformers Version: {version}")
         
-        # Prüfe ob Version >= 2.0.0 (ausreichend für paraphrase-multilingual-mpnet-base-v2)
-        try:
-            from packaging import version as pkg_version
-            if pkg_version.parse(version) < pkg_version.parse("2.0.0"):
-                print(f"⚠ sentence-transformers Version {version} ist zu alt!")
-                print("  Mindestversion: 2.0.0")
-                print("  Upgrade mit: pip install --upgrade sentence-transformers")
-                requirements_ok = False
-            else:
-                print("✓ sentence-transformers Version ist kompatibel")
-        except ImportError:
-            print("⚠ packaging nicht verfügbar, überspringe Versions-Check")
+        # Prüfe ob Version >= 2.7.0
+        from packaging import version as pkg_version
+        if pkg_version.parse(version) < pkg_version.parse("2.7.0"):
+            print(f"⚠ sentence-transformers Version {version} ist zu alt!")
+            print("  Mindestversion: 2.7.0")
+            print("  Upgrade mit: pip install --upgrade sentence-transformers")
+            requirements_ok = False
+        else:
+            print("✓ sentence-transformers Version ist kompatibel")
             
     except ImportError:
         print("❌ sentence-transformers nicht installiert")
-        print("  Installiere mit: pip install sentence-transformers")
+        print("  Installiere mit: pip install sentence-transformers>=2.7.0")
         requirements_ok = False
+    except ImportError as e:
+        print(f"⚠ Fehler bei packaging: {e}")
     
-    # Prüfe transformers (benötigt für HuggingFace Integration)
+    # Prüfe transformers Version
     try:
         import transformers
         version = transformers.__version__
         print(f"✓ transformers Version: {version}")
+        
+        # Prüfe ob Version >= 4.51.0 (empfohlen für Qwen3)
+        try:
+            from packaging import version as pkg_version
+            if pkg_version.parse(version) < pkg_version.parse("4.51.0"):
+                print(f"⚠ transformers Version {version} könnte zu alt sein!")
+                print("  Empfohlene Version: >=4.51.0")
+                print("  Upgrade mit: pip install --upgrade transformers")
+        except:
+            pass
             
     except ImportError:
         print("❌ transformers nicht installiert")
-        print("  Installiere mit: pip install transformers")
+        print("  Installiere mit: pip install transformers>=4.51.0")
         requirements_ok = False
     
-    print("=" * 35)
+    # Prüfe ob Flash Attention verfügbar ist (optional)
+    try:
+        import flash_attn
+        print("✓ Flash Attention verfügbar (optional für Performance)")
+    except ImportError:
+        print("⚠ Flash Attention nicht verfügbar (optional)")
+        print("  Für bessere GPU-Performance installiere: pip install flash-attn")
+    
+    print("=" * 41)
     
     if not requirements_ok:
         print("\n❌ Nicht alle erforderlichen Bibliotheken sind installiert!")
@@ -120,8 +137,8 @@ UNSTRUCTURED_API_URL = os.environ.get(
 PDF_FOLDER = "./PDFs"  # Ordner für PDFs
 PERSIST_DIR = "./chroma_db_store"
 COLLECTION_NAME = "test_collection"
-# Verwende bewährtes multilinguales Embedding-Modell
-EMBED_MODEL_NAME = "sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
+# Upgrade auf Qwen3-Embedding für bessere Embedding-Qualität
+EMBED_MODEL_NAME = "Qwen/Qwen3-Embedding-0.6B"
 
 # Hierarchical Parser Konfiguration
 CHUNK_SIZES_CONFIG = {
@@ -614,10 +631,10 @@ def load_and_process_pdfs():
         return []
 
 def main():
-    print("\n=== Start der PDF-Indexierung mit multilingualen Embeddings ===")
+    print("\n=== Start der PDF-Indexierung mit Qwen3-Embedding ===")
     
-    # Prüfe Embedding Requirements
-    if not check_embedding_requirements():
+    # Prüfe Qwen3-Embedding Requirements
+    if not check_qwen_requirements():
         print("\n❌ Abbruch: Nicht alle erforderlichen Bibliotheken verfügbar.")
         return
     
@@ -652,28 +669,39 @@ def main():
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Embedding-Berechnung wird auf {device.upper()} ausgeführt")
     
-    # Standard Embedding-Konfiguration für sentence-transformers
+    # Qwen3-Embedding Konfiguration
     embedding_kwargs = {
         "device": device,
+        "trust_remote_code": True,  # Erforderlich für Qwen-Modelle
     }
     
-    # Für GPU: Optimiere für bessere Performance
+    # Für GPU: Optimiere für bessere Performance ohne Flash Attention
     if device == "cuda":
+        # Standard GPU-Konfiguration ohne problematisches Flash Attention
         embedding_kwargs["model_kwargs"] = {
             "torch_dtype": torch.float16,  # float16 für GPU-Performance
         }
-        print("✓ GPU-Optimierung mit float16 aktiviert")
+        # Wichtig: Tokenizer für Qwen3 mit padding_side='left' konfigurieren
+        embedding_kwargs["tokenizer_kwargs"] = {
+            "padding_side": "left"
+        }
+        print("✓ GPU-Optimierung mit float16 und left-padding aktiviert")
+    else:
+        # Auch für CPU: left-padding für Qwen3
+        embedding_kwargs["tokenizer_kwargs"] = {
+            "padding_side": "left"
+        }
     
     Settings.embed_model = HuggingFaceEmbedding(
         model_name=EMBED_MODEL_NAME,
         **embedding_kwargs
     )
     Settings.node_parser = create_hierarchical_parser()
-    print(f"✓ Embedding Model '{EMBED_MODEL_NAME}' konfiguriert auf {device.upper()}")
-    print("  - Unterstützt über 50 Sprachen")
-    print("  - 768 Embedding-Dimensionen")
-    print("  - Bewährtes multilinguales Modell")
-    print("  - Optimiert für semantische Ähnlichkeit")
+    print(f"✓ Qwen3-Embedding Model '{EMBED_MODEL_NAME}' konfiguriert auf {device.upper()}")
+    print("  - Unterstützt über 100 Sprachen")
+    print("  - 1024 Embedding-Dimensionen")
+    print("  - 32k Token Kontext")
+    print("  - Instruction-aware Capabilities")
     print("✓ Hierarchischer Parser konfiguriert")
 
     # 4. PDFs laden mit Unstructured

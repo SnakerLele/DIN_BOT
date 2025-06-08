@@ -1,0 +1,163 @@
+(Bibliotheken) PS C:\Users\plimp\OneDrive\KI\Projekte\DIN_BOT> python .\parse_pdf.py
+
+=== Start der PDF-Indexierung mit multilingualen Embeddings ===
+
+===== EMBEDDING REQUIREMENTS =====
+✓ sentence-transformers Version: 4.1.0
+✓ sentence-transformers Version ist kompatibel
+✓ transformers Version: 4.52.4
+===================================
+
+✓ Alle erforderlichen Bibliotheken sind verfügbar!
+
+===== GPU-STATUS =====
+PyTorch Version: 2.7.1+cu128
+CUDA verfügbar: True
+CUDA Version: 12.8
+Anzahl GPUs: 1
+GPU 0: NVIDIA GeForce RTX 3050 Laptop GPU
+  Speicherinfo nicht verfügbar
+======================
+
+
+1. Initialisiere ChromaDB...
+2025-06-08 17:12:12,735 - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+✓ Neue ChromaDB Collection erstellt
+
+2. Erstelle VectorStore...
+
+3. Konfiguriere Embedding Model...
+Embedding-Berechnung wird auf CUDA ausgeführt
+✓ GPU-Optimierung mit float16 aktiviert
+2025-06-08 17:12:12,928 - INFO - Load pretrained SentenceTransformer: sentence-transformers/paraphrase-multilingual-mpnet-base-v2
+2025-06-08 17:12:18,761 - INFO - 2 prompts are loaded, with the keys: ['query', 'text']
+✓ Embedding Model 'sentence-transformers/paraphrase-multilingual-mpnet-base-v2' konfiguriert auf CUDA
+  - Unterstützt über 50 Sprachen
+  - 768 Embedding-Dimensionen
+  - Bewährtes multilinguales Modell
+  - Optimiert für semantische Ähnlichkeit
+✓ Hierarchischer Parser konfiguriert
+
+4. Lade und verarbeite PDFs mit Unstructured...
+
+Lade PDFs aus dem Ordner: ./PDFs
+[RESSOURCEN] Start PDF-Verarbeitung: Speicher: 1269.9MB, CPU: 19.2%
+PDF-Info: 'UNO Classic Spielanleitung.pdf' hat 5 Seiten, Größe: 0.26MB
+✓ Verwende lokale Unstructured-Installation (empfohlen)
+
+Teste direkte lokale Unstructured-Installation...
+[LOKALES UNSTRUCTURED] Verarbeite ./PDFs\UNO Classic Spielanleitung.pdf mit Strategie 'auto'
+[LOKALES UNSTRUCTURED] Starte Partitionierung mit Strategie 'auto'...
+2025-06-08 17:12:23,505 - INFO - pikepdf C++ to Python logger bridge initialized
+2025-06-08 17:12:23,580 - WARNING - The PDF <_io.BufferedReader name='./PDFs\\UNO Classic Spielanleitung.pdf'> contains a metadata field indicating that it should not allow text extraction. Ignoring this field and proceeding. Use the check_extractable if you want to raise an error in this case
+2025-06-08 17:12:25,815 - INFO - Reading PDF for file: ./PDFs\UNO Classic Spielanleitung.pdf ...
+2025-06-08 17:12:36,641 - WARNING - The PDF <_io.BufferedReader name='./PDFs\\UNO Classic Spielanleitung.pdf'> contains a metadata field indicating that it should not allow text extraction. Ignoring this field and proceeding. Use the check_extractable if you want to raise an error in this case
+2025-06-08 17:12:39,847 - INFO - Loading the Table agent ...
+The `max_size` parameter is deprecated and will be removed in v4.26. Please specify in `size['longest_edge'] instead`.
+2025-06-08 17:12:39,976 - INFO - Loading the table structure model ...
+2025-06-08 17:12:40,538 - INFO - Loading pretrained weights from Hugging Face hub (timm/resnet18.a1_in1k)
+2025-06-08 17:12:40,681 - INFO - [timm/resnet18.a1_in1k] Safe alternative available for 'pytorch_model.bin' (as 'model.safetensors'). Loading weights using safetensors.
+2025-06-08 17:12:40,688 - INFO - Missing keys (fc.weight, fc.bias) discovered while loading pretrained weights. This is expected if model is being adapted.
+✓ Lokale Partitionierung abgeschlossen in 24.42s mit 92 Elementen
+Extrahierte Elemente nach Typ:
+  - Image: 6
+  - FigureCaption: 1
+  - Title: 22
+  - NarrativeText: 52
+  - Header: 5
+  - PageBreak: 5
+  - Table: 1
+Gefundene Seitennummern: [1, 2, 3, 4, 5]
+Gültige Dokumente erstellt: 82
+✓ Direkte lokale Unstructured-Partitionierung funktioniert!
+  Testdatei lieferte 82 separate Dokument-Elemente
+  Erste 5 Seitennummern: [1, 1, 1, 1, 1]
+
+[PROZESS] Starte Verarbeitung von 'UNO Classic Spielanleitung.pdf'
+[RESSOURCEN] Vor Laden von 'UNO Classic Spielanleitung.pdf': Speicher: 2281.5MB, CPU: 11.0%
+Verwende direkte lokale Unstructured-Partitionierung mit 'auto' Strategie
+[LOKALES UNSTRUCTURED] Verarbeite ./PDFs\UNO Classic Spielanleitung.pdf mit Strategie 'auto'
+[LOKALES UNSTRUCTURED] Starte Partitionierung mit Strategie 'auto'...
+2025-06-08 17:12:48,024 - WARNING - The PDF <_io.BufferedReader name='./PDFs\\UNO Classic Spielanleitung.pdf'> contains a metadata field indicating that it should not allow text extraction. Ignoring this field and proceeding. Use the check_extractable if you want to raise an error in this case
+2025-06-08 17:12:48,778 - INFO - Reading PDF for file: ./PDFs\UNO Classic Spielanleitung.pdf ...
+2025-06-08 17:12:57,831 - WARNING - The PDF <_io.BufferedReader name='./PDFs\\UNO Classic Spielanleitung.pdf'> contains a metadata field indicating that it should not allow text extraction. Ignoring this field and proceeding. Use the check_extractable if you want to raise an error in this case
+✓ Lokale Partitionierung abgeschlossen in 19.85s mit 92 Elementen
+Extrahierte Elemente nach Typ:
+  - Image: 6
+  - FigureCaption: 1
+  - Title: 22
+  - NarrativeText: 52
+  - Header: 5
+  - PageBreak: 5
+  - Table: 1
+Gefundene Seitennummern: [1, 2, 3, 4, 5]
+Gültige Dokumente erstellt: 82
+✓ Datei 'UNO Classic Spielanleitung.pdf' erfolgreich geladen (19.95s)
+  - Elemente extrahiert: 82
+  - Element 1: 1 Zeichen, Typ: <class 'llama_index.core.schema.Document'>, Seite: 1
+  - Element 2: 42 Zeichen, Typ: <class 'llama_index.core.schema.Document'>, Seite: 1
+  - Element 3: 32 Zeichen, Typ: <class 'llama_index.core.schema.Document'>, Seite: 1
+  - Element 4: 6 Zeichen, Typ: <class 'llama_index.core.schema.Document'>, Seite: 1
+  - Element 5: 344 Zeichen, Typ: <class 'llama_index.core.schema.Document'>, Seite: 1
+    ...
+    -> Erste gefundene Seitennummern in Elementen: [1]
+[RESSOURCEN] Nach Laden von 'UNO Classic Spielanleitung.pdf': Speicher: 2284.5MB, CPU: 28.8%
+
+✓ Insgesamt 82 Dokument-Element(e) erfolgreich geladen
+[RESSOURCEN] Nach Laden aller Dokumente: Speicher: 2284.5MB, CPU: 1.2%
+Bereinige Metadaten...
+✓ Metadaten bereinigt in 0.00s
+  Durchschnittliche Metadatengröße: 147 Zeichen
+[RESSOURCEN] Nach Metadatenbereinigung: Speicher: 2284.5MB, CPU: 1.4%
+
+Analyse der extrahierten Dokumente (nach Bereinigung):
+Datei: UNO Classic Spielanleitung.pdf
+  - Extrahierte Dokument-Elemente: 82
+  - Erkannte eindeutige Seitennummern: [1, 2, 3, 4, 5]
+  - Gesamttextmenge: 12,686 Zeichen
+
+Gesamtzahl der Dokument-Elemente zur Indexierung: 82
+[RESSOURCEN] Vor Rückgabe der Dokumente: Speicher: 2284.5MB, CPU: 9.5%
+
+5. Parse Dokumente in Nodes...
+GPU-Speicher vor Node-Parsing: 656.17 MB
+Parsing documents into nodes: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████| 82/82 [00:00<00:00, 1285.84it/s] 
+-> Parser hat 246 Nodes in 0.07s generiert.
+
+--- Erste 3 Nodes nach dem Parsen (Überprüfung der Metadaten) ---
+
+Node 1 (ID: 25e2df67-56f9-4aaf-8c22-a45fa041f484):
+  Text (Vorschau): ®...
+  Metadaten: {'file_path': './PDFs\\UNO Classic Spielanleitung.pdf', 'file_directory': './PDFs', 'filename': 'UNO Classic Spielanleitung.pdf', 'page_number': 1}
+
+Node 2 (ID: f9aa7eea-fcd4-4af4-939c-12278556ca19):
+  Text (Vorschau): ®...
+  Metadaten: {'file_path': './PDFs\\UNO Classic Spielanleitung.pdf', 'file_directory': './PDFs', 'filename': 'UNO Classic Spielanleitung.pdf', 'page_number': 1}
+
+Node 3 (ID: e76a85bd-3af5-4e35-b296-55c17d1b4e52):
+  Text (Vorschau): ®...
+  Metadaten: {'file_path': './PDFs\\UNO Classic Spielanleitung.pdf', 'file_directory': './PDFs', 'filename': 'UNO Classic Spielanleitung.pdf', 'page_number': 1}
+--- Ende Node-Vorschau ---
+GPU-Speicher nach Node-Parsing: 656.17 MB
+GPU-Speicher-Differenz: 0.00 MB
+
+6. Erstelle Index aus Nodes...
+GPU-Speicher vor Indexierung: 656.17 MB
+Generating embeddings: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████| 246/246 [00:01<00:00, 207.43it/s] 
+GPU-Speicher nach Indexierung: 656.17 MB
+GPU-Speicher nach Indexierung: 656.17 MB
+GPU-Speicher-Differenz für Indexierung: 0.00 MB
+Indexierung abgeschlossen in 1.60s mit GPU-Beschleunigung
+
+=== Indexierung erfolgreich abgeschlossen ===
+- Verarbeitete Dokument-Elemente (aus Reader): 82
+- Verarbeitete Nodes durch Parser: 246
+- Nodes im Index Docstore: 0
+- Elemente direkt in ChromaDB Collection 'test_collection': 246
+
+--- Node-Struktur im Docstore (erste 3 Nodes) ---
+--- Ende Node-Struktur ---
+
+Abschließender GPU-Status:
+- GPU-Speichernutzung: 656.17 MB
+- GPU-Speicher reserviert: 816.00 MB

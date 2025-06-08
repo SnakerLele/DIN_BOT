@@ -22,6 +22,7 @@ debug_logs/
 PDFs/
 pdf/
 rag-tutorial-v2/
+poppler-24.08.0/
 
 # Logs
 *.log
