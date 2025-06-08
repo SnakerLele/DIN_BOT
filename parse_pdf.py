@@ -207,11 +207,111 @@ def process_pdf_with_direct_api(pdf_path: str, strategy: str = "auto") -> List[D
         print(traceback.format_exc())
         return []
 
+def process_pdf_with_local_unstructured(pdf_path: str, strategy: str = "auto") -> List[Document]:
+    """
+    Verarbeitet ein PDF direkt mit der lokalen Unstructured-Installation.
+    Jedes extrahierte Element wird als separates Document behandelt.
+    
+    Args:
+        pdf_path: Pfad zur PDF-Datei
+        strategy: Strategie für die Extraktion ('auto', 'hi_res', 'fast', etc.)
+        
+    Returns:
+        Liste von LlamaIndex Document-Objekten
+    """
+    print(f"[LOKALES UNSTRUCTURED] Verarbeite {pdf_path} mit Strategie '{strategy}'")
+    
+    if not os.path.exists(pdf_path):
+        print(f"❌ Datei nicht gefunden: {pdf_path}")
+        return []
+    
+    try:
+        # Importiere Unstructured direkt
+        from unstructured.partition.pdf import partition_pdf
+        
+        # Dateiname für Metadaten
+        filename = os.path.basename(pdf_path)
+        
+        print(f"[LOKALES UNSTRUCTURED] Starte Partitionierung mit Strategie '{strategy}'...")
+        start_time = time.time()
+        
+        # Direkte Partitionierung des PDFs
+        elements = partition_pdf(
+            filename=pdf_path,
+            strategy=strategy,
+            include_page_breaks=True,
+            infer_table_structure=True,  # Tabellen erkennen
+            combine_text_under_n_chars=0,  # Keine Textkombination
+            new_after_n_chars=None,  # Keine erzwungene Aufteilung
+            max_characters=10000,  # Moderate Chunk-Größe
+        )
+        
+        processing_time = time.time() - start_time
+        print(f"✓ Lokale Partitionierung abgeschlossen in {processing_time:.2f}s mit {len(elements)} Elementen")
+        
+        # Elemente in Document-Objekte umwandeln
+        documents = []
+        page_numbers = set()
+        element_types = {}
+        
+        for element in elements:
+            # Extrahiere wichtige Metadaten
+            metadata = {
+                "file_path": pdf_path,
+                "file_directory": os.path.dirname(pdf_path),
+                "filename": filename
+            }
+            
+            # Extrahiere Seitennummer aus Element-Metadaten
+            if hasattr(element, 'metadata') and element.metadata:
+                if hasattr(element.metadata, 'page_number'):
+                    page_num = element.metadata.page_number
+                    if page_num is not None:  # Nur hinzufügen wenn nicht None
+                        metadata["page_number"] = page_num
+                        page_numbers.add(page_num)
+                
+                # Weitere Metadaten hinzufügen
+                if hasattr(element.metadata, 'coordinates'):
+                    metadata["coordinates"] = str(element.metadata.coordinates)
+                if hasattr(element.metadata, 'category'):
+                    metadata["element_category"] = element.metadata.category
+            
+            # Zähle Element-Typen für Statistik
+            element_type = type(element).__name__
+            element_types[element_type] = element_types.get(element_type, 0) + 1
+            
+            # Erstelle LlamaIndex Document aus dem Element
+            text = str(element)  # Konvertiere Element zu Text
+            if text.strip():  # Nur Elemente mit Inhalt
+                document = Document(
+                    text=text,
+                    metadata=metadata
+                )
+                documents.append(document)
+        
+        # Statistik ausgeben
+        print(f"Extrahierte Elemente nach Typ:")
+        for elem_type, count in element_types.items():
+            print(f"  - {elem_type}: {count}")
+        
+        print(f"Gefundene Seitennummern: {sorted(list(page_numbers))}")
+        print(f"Gültige Dokumente erstellt: {len(documents)}")
+        
+        return documents
+        
+    except ImportError:
+        print("❌ Unstructured ist nicht installiert. Installiere es mit: pip install unstructured[pdf]")
+        return []
+    except Exception as e:
+        print(f"❌ Fehler bei der lokalen Unstructured-Verarbeitung: {str(e)}")
+        print(traceback.format_exc())
+        return []
+
 def load_and_process_pdfs():
     """
-    Lädt PDFs mit UnstructuredReader und bereitet sie für die Indexierung vor.
-    Versucht explizit die 'hi_res' Strategie für bessere Seitentrennung.
-    Falls UnstructuredReader keine strategy unterstützt, wird die direkte API verwendet.
+    Lädt PDFs mit direkter Unstructured-Nutzung für bessere Elementtrennung.
+    Der LlamaIndex UnstructuredReader fasst alle Elemente zu einem Document zusammen,
+    was zu falschen Seitenzuordnungen führt. Deshalb verwenden wir Unstructured direkt.
     """
     def log_resources(message):
         """Loggt Ressourcennutzung mit einer Nachricht"""
@@ -275,36 +375,44 @@ def load_and_process_pdfs():
     else:
         print("✓ Verwende lokale Unstructured-Installation (empfohlen)")
 
-    # Teste lokale UnstructuredReader Funktionalität
-    print("\nTeste lokale UnstructuredReader...")
+    # Teste lokale Unstructured-Installation
+    print("\nTeste direkte lokale Unstructured-Installation...")
     local_reader_works = False
     try:
         if pdf_files:
             test_file = os.path.join(PDF_FOLDER, pdf_files[0])
-            # Teste mit auto-Strategie über unstructured_kwargs
-            test_docs = reader.load_data(
-                file=test_file, 
-                unstructured_kwargs={
-                    "strategy": "auto",
-                    "include_page_breaks": True,
-                    "combine_text_under_n_chars": 0
-                }
-            )
+            # Teste direkte Unstructured-Partitionierung
+            test_docs = process_pdf_with_local_unstructured(test_file, strategy="auto")
             if test_docs:
-                print("✓ Lokale UnstructuredReader funktioniert mit 'auto' Strategie!")
+                print("✓ Direkte lokale Unstructured-Partitionierung funktioniert!")
+                print(f"  Testdatei lieferte {len(test_docs)} separate Dokument-Elemente")
+                # Zeige Seitenverteilung
+                page_nums = [doc.metadata.get('page_number', 'N/A') for doc in test_docs[:5]]
+                print(f"  Erste 5 Seitennummern: {page_nums}")
                 local_reader_works = True
             else:
-                print("⚠ Lokale UnstructuredReader lieferte keine Dokumente")
-    except Exception as te:
-        print(f"⚠ Fehler beim Testen mit 'auto' Strategie: {str(te)}")
-        print("→ Verwende Standard-UnstructuredReader ohne Strategie-Parameter.")
-        try:
-            test_docs = reader.load_data(file=test_file)
-            if test_docs:
-                local_reader_works = True
-                print("✓ Standard UnstructuredReader funktioniert!")
-        except Exception as e2:
-            print(f"❌ Auch Standard-Reader funktioniert nicht: {str(e2)}")
+                print("⚠ Direkte Unstructured-Partitionierung lieferte keine Dokumente")
+                
+        # Fallback-Test mit LlamaIndex UnstructuredReader
+        if not local_reader_works:
+            print("→ Teste LlamaIndex UnstructuredReader als Fallback...")
+            try:
+                test_docs = reader.load_data(
+                    file=test_file, 
+                    unstructured_kwargs={
+                        "strategy": "auto",
+                        "include_page_breaks": True,
+                        "combine_text_under_n_chars": 0
+                    }
+                )
+                if test_docs:
+                    print("✓ LlamaIndex UnstructuredReader funktioniert (aber fasst Elemente zusammen)")
+                    local_reader_works = True
+                else:
+                    print("⚠ LlamaIndex UnstructuredReader lieferte keine Dokumente")
+            except Exception as e2:
+                print(f"❌ LlamaIndex UnstructuredReader funktioniert nicht: {str(e2)}")
+                
     except Exception as e:
         print(f"❌ Fehler beim Testen der lokalen Installation: {str(e)}")
 
@@ -320,34 +428,43 @@ def load_and_process_pdfs():
 
                 file_documents = []
                 
-                # Priorisiere lokale Installation
-                if local_reader_works and not use_direct_api:
-                    # Verwende lokale UnstructuredReader
-                    print(f"Verwende lokale UnstructuredReader mit 'auto' Strategie")
-                    try:
-                        file_documents = reader.load_data(
-                            file=pdf_path,
-                            unstructured_kwargs={
-                                "strategy": "auto",  # Automatische Strategiewahl
-                                "include_page_breaks": True,  # Seitenumbrüche beibehalten
-                                "combine_text_under_n_chars": 0,  # Keine automatische Textkombination
-                                "max_characters": 100000  # Größere Chunks erlauben
-                            }
-                        )
-                    except Exception:
-                        # Fallback ohne strategy Parameter
-                        print("→ Fallback: Verwende Reader ohne strategy Parameter")
-                        file_documents = reader.load_data(file=pdf_path)
-                        
-                elif use_direct_api and api_available:
-                    # Externe API nur als Alternative
-                    print(f"Verwende externe API mit 'auto' Strategie")
-                    file_documents = process_pdf_with_direct_api(pdf_path, strategy="auto")
+                # Priorisiere direkte Unstructured-Nutzung für bessere Element-Trennung
+                try:
+                    # Verwende direkte lokale Unstructured-Partitionierung
+                    print(f"Verwende direkte lokale Unstructured-Partitionierung mit 'auto' Strategie")
+                    file_documents = process_pdf_with_local_unstructured(pdf_path, strategy="auto")
                     
-                else:
-                    # Letzter Fallback: Lokaler Reader ohne strategy
-                    print(f"Fallback: Verwende lokalen Reader ohne Strategie")
-                    file_documents = reader.load_data(file=pdf_path)
+                    # Falls keine Dokumente, versuche hi_res Strategie
+                    if not file_documents:
+                        print("→ Fallback: Versuche 'hi_res' Strategie")
+                        file_documents = process_pdf_with_local_unstructured(pdf_path, strategy="hi_res")
+                        
+                except Exception as e:
+                    print(f"→ Fehler bei direkter Unstructured-Nutzung: {str(e)}")
+                    
+                    # Fallback: Externe API falls verfügbar
+                    if use_direct_api and api_available:
+                        print(f"→ Fallback: Verwende externe API mit 'auto' Strategie")
+                        file_documents = process_pdf_with_direct_api(pdf_path, strategy="auto")
+                    
+                    # Letzter Fallback: LlamaIndex UnstructuredReader (problematisch, aber besser als nichts)
+                    elif local_reader_works:
+                        print(f"→ Letzter Fallback: Verwende LlamaIndex UnstructuredReader")
+                        try:
+                            file_documents = reader.load_data(
+                                file=pdf_path,
+                                unstructured_kwargs={
+                                    "strategy": "auto",
+                                    "include_page_breaks": True,
+                                    "combine_text_under_n_chars": 0,
+                                    "max_characters": 100000
+                                }
+                            )
+                        except Exception:
+                            file_documents = reader.load_data(file=pdf_path)
+                    else:
+                        print("❌ Keine funktionierende Methode gefunden")
+                        file_documents = []
 
                 # Verarbeite die geladenen Dokumente
                 if file_documents:
