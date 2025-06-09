@@ -23,8 +23,8 @@ from .config import (
 )
 from .utils import check_embedding_requirements, check_gpu_status
 from .node_parsers import create_hybrid_parser_system
-from .document_enhancer import create_enhanced_documents_from_pdf
-from .unstructured_wrapper import process_pdf_with_local_unstructured
+from .document_enhancer import semantic_enhanced_pdf
+from .unstructured_wrapper import fallback_local_unstructured_pdf
 
 __version__ = "1.0.0"
 __author__ = "DIN_BOT Team"
@@ -36,8 +36,8 @@ __all__ = [
     'check_embedding_requirements',
     'check_gpu_status',
     'create_hybrid_parser_system',
-    'create_enhanced_documents_from_pdf',
-    'process_pdf_with_local_unstructured',
+    'semantic_enhanced_pdf',
+    'fallback_local_unstructured_pdf',
     'PDF_FOLDER',
     'PERSIST_DIR',
     'COLLECTION_NAME',

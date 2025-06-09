@@ -1,95 +1,362 @@
-2025-06-09 00:24:46,385 - INFO - ============================================================
-2025-06-09 00:24:46,385 - INFO - NEUE RAG-ANFRAGE GESTARTET
-2025-06-09 00:24:46,385 - INFO - ============================================================
-2025-06-09 00:24:46,385 - INFO - Zeitstempel: 2025-06-09 00:24:46
-2025-06-09 00:24:46,385 - INFO - Chat-ID: None
-2025-06-09 00:24:46,385 - INFO - Model: llama3.2:1b
-2025-06-09 00:24:46,386 - INFO - Temperature: 0.2
-2025-06-09 00:24:46,386 - INFO - Max Tokens: 1000
-2025-06-09 00:24:46,386 - INFO - Anzahl eingehender Messages: 1
-2025-06-09 00:24:46,387 - INFO - 
+2025-06-09 21:05:54,310 - INFO - ============================================================
+2025-06-09 21:05:54,311 - INFO - NEUE RAG-ANFRAGE GESTARTET
+2025-06-09 21:05:54,311 - INFO - ============================================================
+2025-06-09 21:05:54,311 - INFO - Zeitstempel: 2025-06-09 21:05:54
+2025-06-09 21:05:54,311 - INFO - Chat-ID: None
+2025-06-09 21:05:54,311 - INFO - Model: llama3.2:1b
+2025-06-09 21:05:54,311 - INFO - Temperature: 0.2
+2025-06-09 21:05:54,311 - INFO - Max Tokens: 1000
+2025-06-09 21:05:54,311 - INFO - Anzahl eingehender Messages: 1
+2025-06-09 21:05:54,313 - INFO - 
 --- EINGEHENDE MESSAGES ---
-2025-06-09 00:24:46,387 - INFO - Message 1:
-2025-06-09 00:24:46,388 - INFO -   Role: user
-2025-06-09 00:24:46,388 - INFO -   Content: ### Task:
-Generate 1-3 broad tags categorizing the main themes of the chat history, along with 1-3 more specific subtopic tags.
-
-### Guidelines:
-- Start with high-level domains (e.g. Science, Technology, Philosophy, Arts, Politics, Business, Health, Sports, Entertainment, Education)
-- Consider including relevant subfields/subdomains if they are strongly represented throughout the conversation
-- If content is too short (less than 3 messages) or too diverse, use only ["General"]
-- Use the chat's primary language; default to English if multilingual
-- Prioritize accuracy over specificity
-
-### Output:
-JSON format: { "tags": ["tag1", "tag2", "tag3"] }
-
-### Chat History:
-<chat_history>
-USER: Was machen die Ereignis- und Gemeinschaftsfelder in Monopoly?
-ASSISTANT: Basierend auf den vorliegenden Textabschnitten kann ich diese Frage nicht beantworten, da es keine Informationen über die spezifischen Funktionen oder Bedeutungen der Ereignis- und Gemeinschaftsfelder im Spiel Monopoly gibt. Es ist jedoch möglich, dass sie Teil des Spiels sind und eine bestimmte Rolle spielen, aber es wäre ratsam, weitere Informationen aus dem Kontext zu suchen.
-
-**Referenzierte Quellen:**
-(Abschnitt: "Vorbereitung des Spiels → Das Spiel", Quelle: monopoly-dm-standard-gebraucht-g046200040.pdf, Seite: 1)
-(Abschnitt: "Vorbereitung des Spiels → Los", Quelle: monopoly-dm-standard-gebraucht-g046200040.pdf, Seite: 1)
-(Abschnitt: "Vorbereitung des Spiels → Straßen", Quelle: monopoly-dm-standard-gebraucht-g046200040.pdf, Seite: 1)
-(Abschnitt: "Vorbereitung des Spiels", Quelle: monopoly-dm-standard-gebraucht-g046200040.pdf, Seite: 1)
-</chat_history>
-2025-06-09 00:24:46,388 - INFO -   Länge: 1636 Zeichen
-2025-06-09 00:24:46,388 - WARNING - [WARNUNG] VERDÄCHTIGE MESSAGE ERKANNT in Message 1: Enthält möglicherweise Tag-Generierung oder andere Prompt-Anweisungen
-2025-06-09 00:24:46,389 - INFO - 
+2025-06-09 21:05:54,313 - INFO - Message 1:
+2025-06-09 21:05:54,314 - INFO -   Role: user
+2025-06-09 21:05:54,314 - INFO -   Content: Wie ist die vorbereitung des Spiels?
+2025-06-09 21:05:54,314 - INFO -   Länge: 36 Zeichen
+2025-06-09 21:05:54,314 - INFO - 
 --- CHAT-SESSION VERWALTUNG ---
-2025-06-09 00:24:46,389 - INFO - Neue Chat-ID erstellt: 5841fc92-0cf6-4918-863d-366b1be9045b
-2025-06-09 00:24:46,389 - INFO - Chat-History geladen: 0 vorherige Nachrichten
-2025-06-09 00:24:46,390 - INFO - 
+2025-06-09 21:05:54,314 - INFO - Neue Chat-ID erstellt: de4c51ea-3b98-44e8-889c-e07e40f96b33
+2025-06-09 21:05:54,315 - INFO - Chat-History geladen: 0 vorherige Nachrichten
+2025-06-09 21:05:54,315 - INFO - 
 --- USER-MESSAGE ANALYSE ---
-2025-06-09 00:24:46,390 - INFO - Anzahl User-Messages gefunden: 1
-2025-06-09 00:24:46,390 - INFO - Letzte User-Message:
-2025-06-09 00:24:46,390 - INFO -   Content: ### Task:
-Generate 1-3 broad tags categorizing the main themes of the chat history, along with 1-3 more specific subtopic tags.
-
-### Guidelines:
-- Start with high-level domains (e.g. Science, Technology, Philosophy, Arts, Politics, Business, Health, Sports, Entertainment, Education)
-- Consider including relevant subfields/subdomains if they are strongly represented throughout the conversation
-- If content is too short (less than 3 messages) or too diverse, use only ["General"]
-- Use the chat's primary language; default to English if multilingual
-- Prioritize accuracy over specificity
-
-### Output:
-JSON format: { "tags": ["tag1", "tag2", "tag3"] }
-
-### Chat History:
-<chat_history>
-USER: Was machen die Ereignis- und Gemeinschaftsfelder in Monopoly?
-ASSISTANT: Basierend auf den vorliegenden Textabschnitten kann ich diese Frage nicht beantworten, da es keine Informationen über die spezifischen Funktionen oder Bedeutungen der Ereignis- und Gemeinschaftsfelder im Spiel Monopoly gibt. Es ist jedoch möglich, dass sie Teil des Spiels sind und eine bestimmte Rolle spielen, aber es wäre ratsam, weitere Informationen aus dem Kontext zu suchen.
-
-**Referenzierte Quellen:**
-(Abschnitt: "Vorbereitung des Spiels → Das Spiel", Quelle: monopoly-dm-standard-gebraucht-g046200040.pdf, Seite: 1)
-(Abschnitt: "Vorbereitung des Spiels → Los", Quelle: monopoly-dm-standard-gebraucht-g046200040.pdf, Seite: 1)
-(Abschnitt: "Vorbereitung des Spiels → Straßen", Quelle: monopoly-dm-standard-gebraucht-g046200040.pdf, Seite: 1)
-(Abschnitt: "Vorbereitung des Spiels", Quelle: monopoly-dm-standard-gebraucht-g046200040.pdf, Seite: 1)
-</chat_history>
-2025-06-09 00:24:46,391 - INFO -   Länge: 1636 Zeichen
-2025-06-09 00:24:46,405 - INFO - 
+2025-06-09 21:05:54,315 - INFO - Anzahl User-Messages gefunden: 1
+2025-06-09 21:05:54,315 - INFO - Letzte User-Message:
+2025-06-09 21:05:54,316 - INFO -   Content: Wie ist die vorbereitung des Spiels?
+2025-06-09 21:05:54,316 - INFO -   Länge: 36 Zeichen
+2025-06-09 21:05:54,317 - INFO - 
 --- META-ANFRAGE ERKENNUNG ---
-2025-06-09 00:24:46,405 - INFO - Meta-Anfrage erkannt: True
-2025-06-09 00:24:46,405 - INFO - Meta-Type: title
-2025-06-09 00:24:46,405 - INFO - Confidence: 0.60
-2025-06-09 00:24:46,405 - WARNING - [ZIEL] META-ANFRAGE ERKANNT: title (Confidence: 0.60)
-2025-06-09 00:24:46,405 - INFO - [BLITZ] Umgehung von RAG - Direkte LLM-Verarbeitung
-2025-06-09 00:24:46,406 - INFO - 
---- META-ANFRAGE VERARBEITUNG ---
-2025-06-09 00:24:46,406 - INFO - Starte direkte LLM-Verarbeitung ohne RAG...
-2025-06-09 00:24:54,376 - INFO - LLM-Response erhalten: ## Broad Tags
-* **Business and Economics**
-* **Finance and Accounting**
+2025-06-09 21:05:54,317 - INFO - Meta-Anfrage erkannt: False
+2025-06-09 21:05:54,317 - INFO - 
+--- NORMALE RAG-VERARBEITUNG ---
+2025-06-09 21:05:54,317 - INFO - [SUCHE] Starte normale RAG-Verarbeitung für echte User-Fragen
+2025-06-09 21:05:54,317 - INFO - 
+--- VERDÄCHTIGE INHALTE PRÜFUNG ---
+2025-06-09 21:05:54,317 - INFO - Verdächtige Keywords geprüft: ['tag', 'generierung', 'erstelle tags', 'klassifizierung', 'kategorisierung', 'prompt', 'system', 'instruction']
+2025-06-09 21:05:54,317 - INFO - Verdächtige Inhalte erkannt: False
+2025-06-09 21:05:54,317 - INFO - 
+--- FINALE USER-MESSAGE ---
+2025-06-09 21:05:54,317 - INFO - Finale Message für RAG: 'Wie ist die vorbereitung des Spiels?'
+2025-06-09 21:05:54,318 - INFO - Message-Länge: 36 Zeichen
+2025-06-09 21:05:54,318 - INFO - 
+--- CHAT-ENGINE ABFRAGE ---
+2025-06-09 21:05:54,318 - INFO - [SUCHE] Starte Chat-Engine Abfrage...
+2025-06-09 21:05:54,318 - INFO - [ZIEL] Query: 'Wie ist die vorbereitung des Spiels?'
+2025-06-09 21:05:54,318 - INFO - [BUCH] Chat-History Länge: 0
+2025-06-09 21:05:54,377 - INFO - 
+[GEHIRN] USER-QUERY EMBEDDING:
+2025-06-09 21:05:54,377 - INFO - ├─ Embedding erfolgreich erstellt
+2025-06-09 21:05:54,377 - INFO - ├─ Dimensionen: 768
+2025-06-09 21:05:54,377 - INFO - ├─ Embedding-Vektor (erste 10 Werte): [-0.014722369611263275, 0.026979947462677956, -0.004794146865606308, 0.02046462520956993, -0.032930463552474976, 0.006900967098772526, -0.03721140697598457, 0.010925697162747383, -0.08456830680370331, 0.01121277455240488]
+2025-06-09 21:05:54,377 - INFO - └─ Embedding-Norm: 1.000000
+2025-06-09 21:05:54,380 - INFO - 
+[STATISTIK] CHROMADB STATUS:
+2025-06-09 21:05:54,380 - INFO - ├─ Collection Name: test_collection
+2025-06-09 21:05:54,380 - INFO - ├─ Anzahl Dokumente in Collection: 21
+2025-06-09 21:05:54,380 - INFO - └─ Collection verfügbar: [OK]
+2025-06-09 21:05:54,380 - INFO - 
+[CONFIG] CHAT-ENGINE KONFIGURATION:
+2025-06-09 21:05:54,380 - INFO - ├─ Chat Mode: context
+2025-06-09 21:05:54,380 - INFO - ├─ Retriever Type: VectorIndexRetriever
+2025-06-09 21:05:54,380 - INFO - ├─ Similarity Top K: 4
+2025-06-09 21:05:54,380 - INFO - ├─ Vector Index Type: VectorStoreIndex
+2025-06-09 21:05:54,380 - INFO - ├─ Vector Store Type: ChromaVectorStore
+2025-06-09 21:05:54,380 - INFO - ├─ LLM Type: Ollama
+2025-06-09 21:05:54,380 - INFO - ├─ LLM Model: llama3.2:1b
+2025-06-09 21:05:54,380 - INFO - ├─ LLM Base URL: http://localhost:11434
+2025-06-09 21:05:54,380 - INFO - └─ System Prompt: N/A
+2025-06-09 21:06:43,727 - INFO - [OK] Chat-Engine Antwort erhalten
+2025-06-09 21:06:43,728 - INFO - Response-Länge: 1402 Zeichen
+2025-06-09 21:06:43,728 - INFO - Response-Vorschau: Laut dem bereitgestellten Textabschnitt: "Die Ereignis- und Gemeinschaftskarten werden getrennt gemischt und mit der Rückseite nach oben auf die entsprechenden Felder in der Mitte des Spielplans geleg...
+2025-06-09 21:06:43,728 - INFO - 
+[ROBOTER] LLM-RESPONSE QUALITÄTS-ANALYSE:
+2025-06-09 21:06:43,728 - INFO - ├─ Response-Länge: 1402 Zeichen
+2025-06-09 21:06:43,728 - INFO - ├─ Anzahl Wörter: 206
+2025-06-09 21:06:43,728 - INFO - ├─ Anzahl Zeilen: 23
+2025-06-09 21:06:43,728 - WARNING - [WARNUNG] QUALITÄTSPROBLEME ERKANNT:
+2025-06-09 21:06:43,728 - WARNING -   - Keine Quellenangaben in Response erkennbar
+2025-06-09 21:06:43,728 - INFO - ├─ Deutsche Sprache erkannt: [OK] (7 Indikatoren)
+2025-06-09 21:06:43,729 - INFO - └─ Response-Sprache entspricht User-Query: [OK]
+2025-06-09 21:06:43,729 - INFO - 
+[ZIEL] FINALER KONTEXT AN LLM:
+2025-06-09 21:06:43,729 - INFO - ================================================================================
+2025-06-09 21:06:43,729 - INFO - [KONTEXT] KOMBINIERTER KONTEXT (was an LLM gesendet wurde):
+2025-06-09 21:06:43,729 - INFO - ├─ Anzahl Kontext-Blöcke: 4
+2025-06-09 21:06:43,730 - INFO - ├─ Gesamtlänge: 2246 Zeichen
+2025-06-09 21:06:43,730 - INFO - ├─ Vollständiger Kontext:
+2025-06-09 21:06:43,730 - INFO - │  ──────────────────────────────────────────────────────────────────────
+2025-06-09 21:06:43,730 - INFO - │     1: [CONTEXT 1]
+2025-06-09 21:06:43,730 - INFO - │     2: Vorbereitung des Spiels
+2025-06-09 21:06:43,731 - INFO - │     3: 
+2025-06-09 21:06:43,731 - INFO - │     4: Die Ereignis- und Gemeinschaftskarten werden getrennt gemischt und mit der Rückseite nach oben auf die entsprechenden Felder in der Mitte des Spielplans gelegt. Die Spieler wählen einen Bankhalter, der an jeden Teilnehmer eine Spielfigur und 30.000 DM Spielgeld in fol- gender Sortierung austeilt: 1 x 10.000 DM 10 x 200 DM 6 x 2.000 DM 7 x 100 DM 4 x 1.000 DM 5x 20 DM 6 x 2.000 DM 4 x 1.000 DM 3 x 400 DM Das übrige Geld, die Besitzrechtskarten (Bahnhöfe, Straßen, Wasser- und Elektrizitätswerk), die Häuser und Hotels verwaltet der Bankhalter. Falls der Bankhalter mitspielt, muß er sein eigenes Geld sorgfältig von dem Vermögen der Bank getrennt halten. Beginnend mit dem Bankhalter würfelt jeder Spieler mit einem Würfel einmal. Der Spieler mit dem höchsten Wurf beginnt das Spiel.
+2025-06-09 21:06:43,731 - INFO - │     5: 
+2025-06-09 21:06:43,731 - INFO - │     6: [CONTEXT 2]
+2025-06-09 21:06:43,731 - INFO - │     7: Das Spiel
+2025-06-09 21:06:43,731 - INFO - │     8: 
+2025-06-09 21:06:43,731 - INFO - │     9: Der erste Spieler setzt seine Figur auf das Feld „LOS". Dann würfelt er mit 2 Würfeln und bewegt seine Spielfigur in Pfeilrichtung um die Summe der Augen beider Würfel weiter. Je nachdem auf welchem Feld der Spieler landet, kann er Straßen, Bahnhöfe, das Wasser- oder das Elektrizitätswerk kaufen oder ersteigern, muß Steuern bezahlen, ins Gefängnis gehen oder eine Ereignis- oder Gemeinschaftskarte ziehen. Anschließend ist der nächste Spieler im Uhrzeigersinn an der Reihe. Es können auch 2 oder mehr Figuren auf einem Feld stehen. Bei einem Pasch (beide Würfel gleiche Augenzahl) führt der Spieler seinen Zug in gewohnter Weise aus, mit allen Rechten und Pflichten, die daraus entstehen. Danach muß er noch einmal würfeln. Ist dies wiederum ein Pasch, muß er ein drittes Mal würfeln. Wirft der Spieler dreimal hintereinander einen Pasch, darf er den dritten Zug nicht mehr ausführen, sondern muß sich mit seiner Spielfigur sofort ins Gefängnis begeben.
+2025-06-09 21:06:43,731 - INFO - │    10: 
+2025-06-09 21:06:43,732 - INFO - │    11: [CONTEXT 3]
+2025-06-09 21:06:43,732 - INFO - │    12: Ausstattung
+2025-06-09 21:06:43,732 - INFO - │    13: 
+2025-06-09 21:06:43,732 - INFO - │    14: Zum Spiel gehören der Spielplan, 6 verschiedene Spielfiguren, Würfel, Spielgeld, grüne Häuser, rote Hotels, 28 Besitzrechtskarten, 16 Gemeinschafts- und 16 Ereigniskarten.
+2025-06-09 21:06:43,732 - INFO - │    15: 
+2025-06-09 21:06:43,732 - INFO - │    16: [CONTEXT 4]
+2025-06-09 21:06:43,732 - INFO - │    17: Die Bedeutung der Felder des Spielplans
+2025-06-09 21:06:43,732 - INFO - │    18: 
+2025-06-09 21:06:43,732 - INFO - │    19: Los Jedesmal wenn ein Spieler mit seiner Figur das Feld „Los" erreicht oder passiert, zahlt ihm der Bankhalter ein Gehalt von 4.000 DM. Dies gilt nur, wenn er sich in Pfeilrichtung bewegt.
+2025-06-09 21:06:43,732 - INFO - │    20: 
+2025-06-09 21:06:43,732 - INFO - │    21: 
+2025-06-09 21:06:43,732 - INFO - │  ──────────────────────────────────────────────────────────────────────
+2025-06-09 21:06:43,733 - INFO - └─ KONTEXT ENDE
+2025-06-09 21:06:43,733 - INFO - 
+[NACHRICHT] FINALE LLM-ANFRAGE (rekonstruiert):
+2025-06-09 21:06:43,733 - INFO - ================================================================================
+2025-06-09 21:06:43,733 - INFO - SYSTEM:
+2025-06-09 21:06:43,733 - INFO - 
+KONTEXT:
+2025-06-09 21:06:43,733 - INFO - [KONTEXT 1]: Vorbereitung des Spiels
 
-## Specific Subtopic Tags
-* **Game Design**: Monopoly, Board Game Design, Gameplay Mechanics
-* **Strategy and Operations Research**: Game Theory, Market Analysis, Economic Modeling
-* **Software Development**: Game Engine Development, Programming Languages, Game Implementation
-2025-06-09 00:24:54,386 - INFO - [DATEI] Meta-Request Debug-Datei erstellt: debug_20250609_002454_376
-2025-06-09 00:24:54,386 - INFO - [OK] Meta-Anfrage erfolgreich verarbeitet: title
-2025-06-09 00:24:54,386 - INFO - ============================================================
-2025-06-09 00:24:54,386 - INFO - RAG-ANFRAGE ABGESCHLOSSEN (META-REQUEST)
-2025-06-09 00:24:54,386 - INFO - ============================================================
+Die Ereignis- und Gemeinschaftskarten werden getrennt gemischt und mit der Rückseite nach oben auf die entsprechenden Felder in der Mitte des Spielplans gelegt. Die Spieler wählen einen Bankhalter, der an jeden Teilnehmer eine Spielfigur und 30.000 DM Spielgeld in fol- gender Sortierung austeilt: 1 x 10.000 DM 10 x 200 DM 6 x 2.000 DM 7 x 100 DM 4 x 1.000 DM 5x 20 DM 6 x 2.000 DM 4 x 1.000 DM 3 x 400 DM Das übrige Geld, die Besitzrechtskarten (Bahnhöfe, Straßen, Wasser- und Elektrizitätswerk), die Häuser und Hotels verwaltet der Bankhalter. Falls der Bankhalter mitspielt, muß er sein eigenes Geld sorgfältig von dem Vermögen der Bank getrennt halten. Beginnend mit dem Bankhalter würfelt jeder Spieler mit einem Würfel einmal. Der Spieler mit dem höchsten Wurf beginnt das Spiel.
+2025-06-09 21:06:43,733 - INFO - [KONTEXT 2]: Das Spiel
+
+Der erste Spieler setzt seine Figur auf das Feld „LOS". Dann würfelt er mit 2 Würfeln und bewegt seine Spielfigur in Pfeilrichtung um die Summe der Augen beider Würfel weiter. Je nachdem auf welchem Feld der Spieler landet, kann er Straßen, Bahnhöfe, das Wasser- oder das Elektrizitätswerk kaufen oder ersteigern, muß Steuern bezahlen, ins Gefängnis gehen oder eine Ereignis- oder Gemeinschaftskarte ziehen. Anschließend ist der nächste Spieler im Uhrzeigersinn an der Reihe. Es können auch 2 oder mehr Figuren auf einem Feld stehen. Bei einem Pasch (beide Würfel gleiche Augenzahl) führt der Spieler seinen Zug in gewohnter Weise aus, mit allen Rechten und Pflichten, die daraus entstehen. Danach muß er noch einmal würfeln. Ist dies wiederum ein Pasch, muß er ein drittes Mal würfeln. Wirft der Spieler dreimal hintereinander einen Pasch, darf er den dritten Zug nicht mehr ausführen, sondern muß sich mit seiner Spielfigur sofort ins Gefängnis begeben.
+2025-06-09 21:06:43,733 - INFO - [KONTEXT 3]: Ausstattung
+
+Zum Spiel gehören der Spielplan, 6 verschiedene Spielfiguren, Würfel, Spielgeld, grüne Häuser, rote Hotels, 28 Besitzrechtskarten, 16 Gemeinschafts- und 16 Ereigniskarten.
+2025-06-09 21:06:43,733 - INFO - [KONTEXT 4]: Die Bedeutung der Felder des Spielplans
+
+Los Jedesmal wenn ein Spieler mit seiner Figur das Feld „Los" erreicht oder passiert, zahlt ihm der Bankhalter ein Gehalt von 4.000 DM. Dies gilt nur, wenn er sich in Pfeilrichtung bewegt.
+2025-06-09 21:06:43,733 - INFO - 
+USER QUERY: Wie ist die vorbereitung des Spiels?
+2025-06-09 21:06:43,733 - INFO - ================================================================================
+2025-06-09 21:06:43,734 - INFO - 
+--- SENTENCE-WINDOW POSTPROCESSOR ANALYSE ---
+2025-06-09 21:06:43,734 - INFO - [OPTIMIERUNG] MetadataReplacementPostProcessor aktiv: JA
+2025-06-09 21:06:43,734 - INFO - [ZIEL] Target Metadata Key: 'window' (Sentence-Window Kontext)
+2025-06-09 21:06:43,734 - INFO - [FUNKTION] Ersetzt einzelne Sätze durch erweiterten Kontext vor LLM-Verarbeitung
+2025-06-09 21:06:43,734 - INFO - 
+--- QUELLEN-ANALYSE ---
+2025-06-09 21:06:43,734 - INFO - [DATEI] Anzahl der Source Nodes: 4
+2025-06-09 21:06:43,734 - INFO - [SUCHE] DETAILLIERTE CHUNK-ANALYSE:
+2025-06-09 21:06:43,734 - INFO - ================================================================================
+2025-06-09 21:06:43,735 - INFO - 
+[ZIEL] CHUNK 1 von 4:
+2025-06-09 21:06:43,735 - INFO - ┌─ METADATEN:
+2025-06-09 21:06:43,735 - INFO - │  [ORDNER] Datei: monopoly-dm-standard-gebraucht-g046200040.pdf
+2025-06-09 21:06:43,735 - INFO - │  [DATEI] Seite: 1
+2025-06-09 21:06:43,735 - INFO - │  [STERN] Similarity Score: 0.177528
+2025-06-09 21:06:43,735 - INFO - │  [ID] Node ID: e255bdf3-7eae-41b6-aad3-f29440c76721
+2025-06-09 21:06:43,735 - INFO - ├─ [🎯] HEADER-STRUKTUR:
+2025-06-09 21:06:43,735 - INFO - │  [QUALITÄT] Header-Qualität: GOOD
+2025-06-09 21:06:43,735 - INFO - │  [STRUKTUR] Hierarchie-Level: 1
+2025-06-09 21:06:43,735 - INFO - │  [PFAD] Abschnitts-Pfad: Vorbereitung des Spiels
+2025-06-09 21:06:43,736 - INFO - │  [TITEL] Verfügbare Überschriften:
+2025-06-09 21:06:43,736 - INFO - │     section_h1: Vorbereitung des Spiels
+2025-06-09 21:06:43,736 - INFO - │  [BEWERTUNG] Gesamt-Chunk-Qualität: EXCELLENT
+2025-06-09 21:06:43,736 - INFO - │     Score-Qualität: EXCELLENT
+2025-06-09 21:06:43,737 - INFO - │     Header-Qualität: GOOD
+2025-06-09 21:06:43,737 - INFO - │     Content-Qualität: EXCELLENT
+2025-06-09 21:06:43,737 - INFO - │  [KONTEXT] Vollständige Metadaten:
+2025-06-09 21:06:43,737 - INFO - │     file_path: ./PDFs\monopoly-dm-standard-gebraucht-g046200040.pdf
+2025-06-09 21:06:43,737 - INFO - │     file_directory: ./PDFs
+2025-06-09 21:06:43,737 - INFO - │     filename: monopoly-dm-standard-gebraucht-g046200040.pdf
+2025-06-09 21:06:43,737 - INFO - │     section_title: Vorbereitung des Spiels
+2025-06-09 21:06:43,737 - INFO - │     chunk_index: 2
+2025-06-09 21:06:43,737 - INFO - │     semantic_chunk: True
+2025-06-09 21:06:43,738 - INFO - │     page_number: 1
+2025-06-09 21:06:43,738 - INFO - │     section_h1: Vorbereitung des Spiels
+2025-06-09 21:06:43,738 - INFO - │     header_count: 1
+2025-06-09 21:06:43,738 - INFO - │     contains_headers: True
+2025-06-09 21:06:43,738 - INFO - │     first_header: Vorbereitung des Spiels
+2025-06-09 21:06:43,738 - INFO - ├─ CHUNK-TEXT:
+2025-06-09 21:06:43,738 - INFO - │  [TEXT] Text-Länge: 811 Zeichen
+2025-06-09 21:06:43,738 - INFO - │  [DATEI] Vollständiger Text:
+2025-06-09 21:06:43,738 - INFO - │  ──────────────────────────────────────────────────────────────────────
+2025-06-09 21:06:43,738 - INFO - │    1: Vorbereitung des Spiels
+2025-06-09 21:06:43,738 - INFO - │    2: 
+2025-06-09 21:06:43,738 - INFO - │    3: Die Ereignis- und Gemeinschaftskarten werden getrennt gemischt und mit der Rückseite nach oben auf die entsprechenden Felder in der Mitte des Spielplans gelegt. Die Spieler wählen einen Bankhalter, der an jeden Teilnehmer eine Spielfigur und 30.000 DM Spielgeld in fol- gender Sortierung austeilt: 1 x 10.000 DM 10 x 200 DM 6 x 2.000 DM 7 x 100 DM 4 x 1.000 DM 5x 20 DM 6 x 2.000 DM 4 x 1.000 DM 3 x 400 DM Das übrige Geld, die Besitzrechtskarten (Bahnhöfe, Straßen, Wasser- und Elektrizitätswerk), die Häuser und Hotels verwaltet der Bankhalter. Falls der Bankhalter mitspielt, muß er sein eigenes Geld sorgfältig von dem Vermögen der Bank getrennt halten. Beginnend mit dem Bankhalter würfelt jeder Spieler mit einem Würfel einmal. Der Spieler mit dem höchsten Wurf beginnt das Spiel.
+2025-06-09 21:06:43,739 - INFO - │  ──────────────────────────────────────────────────────────────────────
+2025-06-09 21:06:43,739 - INFO - ├─ CHUNK-HASH: 1d7c4185
+2025-06-09 21:06:43,739 - INFO - ├─ EMBEDDING: Nicht verfügbar
+2025-06-09 21:06:43,739 - INFO - └─ CHUNK 1 ENDE
+2025-06-09 21:06:43,739 - INFO - ================================================================================
+2025-06-09 21:06:43,739 - INFO - 
+[ZIEL] CHUNK 2 von 4:
+2025-06-09 21:06:43,739 - INFO - ┌─ METADATEN:
+2025-06-09 21:06:43,739 - INFO - │  [ORDNER] Datei: monopoly-dm-standard-gebraucht-g046200040.pdf
+2025-06-09 21:06:43,741 - INFO - │  [DATEI] Seite: 1
+2025-06-09 21:06:43,741 - INFO - │  [STERN] Similarity Score: 0.166097
+2025-06-09 21:06:43,741 - INFO - │  [ID] Node ID: 990c6e64-5c03-4b4a-9fe2-bb663e81006b
+2025-06-09 21:06:43,741 - INFO - ├─ [🎯] HEADER-STRUKTUR:
+2025-06-09 21:06:43,741 - INFO - │  [QUALITÄT] Header-Qualität: GOOD
+2025-06-09 21:06:43,741 - INFO - │  [STRUKTUR] Hierarchie-Level: 1
+2025-06-09 21:06:43,741 - INFO - │  [PFAD] Abschnitts-Pfad: Das Spiel
+2025-06-09 21:06:43,741 - INFO - │  [TITEL] Verfügbare Überschriften:
+2025-06-09 21:06:43,741 - INFO - │     section_h1: Das Spiel
+2025-06-09 21:06:43,741 - INFO - │  [BEWERTUNG] Gesamt-Chunk-Qualität: EXCELLENT
+2025-06-09 21:06:43,741 - INFO - │     Score-Qualität: EXCELLENT
+2025-06-09 21:06:43,741 - INFO - │     Header-Qualität: GOOD
+2025-06-09 21:06:43,741 - INFO - │     Content-Qualität: EXCELLENT
+2025-06-09 21:06:43,741 - INFO - │  [KONTEXT] Vollständige Metadaten:
+2025-06-09 21:06:43,742 - INFO - │     file_path: ./PDFs\monopoly-dm-standard-gebraucht-g046200040.pdf
+2025-06-09 21:06:43,742 - INFO - │     file_directory: ./PDFs
+2025-06-09 21:06:43,742 - INFO - │     filename: monopoly-dm-standard-gebraucht-g046200040.pdf
+2025-06-09 21:06:43,742 - INFO - │     section_title: Das Spiel
+2025-06-09 21:06:43,742 - INFO - │     chunk_index: 3
+2025-06-09 21:06:43,742 - INFO - │     semantic_chunk: True
+2025-06-09 21:06:43,742 - INFO - │     page_number: 1
+2025-06-09 21:06:43,742 - INFO - │     section_h1: Das Spiel
+2025-06-09 21:06:43,742 - INFO - │     header_count: 1
+2025-06-09 21:06:43,742 - INFO - │     contains_headers: True
+2025-06-09 21:06:43,742 - INFO - │     first_header: Das Spiel
+2025-06-09 21:06:43,742 - INFO - ├─ CHUNK-TEXT:
+2025-06-09 21:06:43,742 - INFO - │  [TEXT] Text-Länge: 966 Zeichen
+2025-06-09 21:06:43,742 - INFO - │  [DATEI] Vollständiger Text:
+2025-06-09 21:06:43,742 - INFO - │  ──────────────────────────────────────────────────────────────────────
+2025-06-09 21:06:43,743 - INFO - │    1: Das Spiel
+2025-06-09 21:06:43,743 - INFO - │    2: 
+2025-06-09 21:06:43,743 - INFO - │    3: Der erste Spieler setzt seine Figur auf das Feld „LOS". Dann würfelt er mit 2 Würfeln und bewegt seine Spielfigur in Pfeilrichtung um die Summe der Augen beider Würfel weiter. Je nachdem auf welchem Feld der Spieler landet, kann er Straßen, Bahnhöfe, das Wasser- oder das Elektrizitätswerk kaufen oder ersteigern, muß Steuern bezahlen, ins Gefängnis gehen oder eine Ereignis- oder Gemeinschaftskarte ziehen. Anschließend ist der nächste Spieler im Uhrzeigersinn an der Reihe. Es können auch 2 oder mehr Figuren auf einem Feld stehen. Bei einem Pasch (beide Würfel gleiche Augenzahl) führt der Spieler seinen Zug in gewohnter Weise aus, mit allen Rechten und Pflichten, die daraus entstehen. Danach muß er noch einmal würfeln. Ist dies wiederum ein Pasch, muß er ein drittes Mal würfeln. Wirft der Spieler dreimal hintereinander einen Pasch, darf er den dritten Zug nicht mehr ausführen, sondern muß sich mit seiner Spielfigur sofort ins Gefängnis begeben.
+2025-06-09 21:06:43,743 - INFO - │  ──────────────────────────────────────────────────────────────────────
+2025-06-09 21:06:43,743 - INFO - ├─ CHUNK-HASH: 4d77699a
+2025-06-09 21:06:43,743 - INFO - ├─ EMBEDDING: Nicht verfügbar
+2025-06-09 21:06:43,743 - INFO - └─ CHUNK 2 ENDE
+2025-06-09 21:06:43,743 - INFO - ================================================================================
+2025-06-09 21:06:43,745 - INFO - 
+[ZIEL] CHUNK 3 von 4:
+2025-06-09 21:06:43,745 - INFO - ┌─ METADATEN:
+2025-06-09 21:06:43,745 - INFO - │  [ORDNER] Datei: monopoly-dm-standard-gebraucht-g046200040.pdf
+2025-06-09 21:06:43,745 - INFO - │  [DATEI] Seite: 1
+2025-06-09 21:06:43,745 - INFO - │  [STERN] Similarity Score: 0.159486
+2025-06-09 21:06:43,745 - INFO - │  [ID] Node ID: 55dec5f6-755c-4e20-8bcc-ba2327994b6c
+2025-06-09 21:06:43,745 - INFO - ├─ [🎯] HEADER-STRUKTUR:
+2025-06-09 21:06:43,745 - INFO - │  [QUALITÄT] Header-Qualität: GOOD
+2025-06-09 21:06:43,745 - INFO - │  [STRUKTUR] Hierarchie-Level: 1
+2025-06-09 21:06:43,745 - INFO - │  [PFAD] Abschnitts-Pfad: Ausstattung
+2025-06-09 21:06:43,745 - INFO - │  [TITEL] Verfügbare Überschriften:
+2025-06-09 21:06:43,745 - INFO - │     section_h1: Ausstattung
+2025-06-09 21:06:43,746 - INFO - │  [BEWERTUNG] Gesamt-Chunk-Qualität: GOOD
+2025-06-09 21:06:43,746 - INFO - │     Score-Qualität: EXCELLENT
+2025-06-09 21:06:43,746 - INFO - │     Header-Qualität: GOOD
+2025-06-09 21:06:43,746 - INFO - │     Content-Qualität: FAIR
+2025-06-09 21:06:43,746 - INFO - │  [KONTEXT] Vollständige Metadaten:
+2025-06-09 21:06:43,746 - INFO - │     file_path: ./PDFs\monopoly-dm-standard-gebraucht-g046200040.pdf
+2025-06-09 21:06:43,746 - INFO - │     file_directory: ./PDFs
+2025-06-09 21:06:43,746 - INFO - │     filename: monopoly-dm-standard-gebraucht-g046200040.pdf
+2025-06-09 21:06:43,746 - INFO - │     section_title: Ausstattung
+2025-06-09 21:06:43,746 - INFO - │     chunk_index: 1
+2025-06-09 21:06:43,746 - INFO - │     semantic_chunk: True
+2025-06-09 21:06:43,746 - INFO - │     page_number: 1
+2025-06-09 21:06:43,746 - INFO - │     section_h1: Ausstattung
+2025-06-09 21:06:43,746 - INFO - │     header_count: 1
+2025-06-09 21:06:43,747 - INFO - │     contains_headers: True
+2025-06-09 21:06:43,747 - INFO - │     first_header: Ausstattung
+2025-06-09 21:06:43,747 - INFO - ├─ CHUNK-TEXT:
+2025-06-09 21:06:43,747 - INFO - │  [TEXT] Text-Länge: 184 Zeichen
+2025-06-09 21:06:43,747 - INFO - │  [DATEI] Vollständiger Text:
+2025-06-09 21:06:43,747 - INFO - │  ──────────────────────────────────────────────────────────────────────
+2025-06-09 21:06:43,747 - INFO - │    1: Ausstattung
+2025-06-09 21:06:43,747 - INFO - │    2: 
+2025-06-09 21:06:43,747 - INFO - │    3: Zum Spiel gehören der Spielplan, 6 verschiedene Spielfiguren, Würfel, Spielgeld, grüne Häuser, rote Hotels, 28 Besitzrechtskarten, 16 Gemeinschafts- und 16 Ereigniskarten.
+2025-06-09 21:06:43,747 - INFO - │  ──────────────────────────────────────────────────────────────────────
+2025-06-09 21:06:43,747 - INFO - ├─ CHUNK-HASH: dcb13bc9
+2025-06-09 21:06:43,747 - INFO - ├─ EMBEDDING: Nicht verfügbar
+2025-06-09 21:06:43,747 - INFO - └─ CHUNK 3 ENDE
+2025-06-09 21:06:43,747 - INFO - ================================================================================
+2025-06-09 21:06:43,748 - INFO - 
+[ZIEL] CHUNK 4 von 4:
+2025-06-09 21:06:43,748 - INFO - ┌─ METADATEN:
+2025-06-09 21:06:43,748 - INFO - │  [ORDNER] Datei: monopoly-dm-standard-gebraucht-g046200040.pdf
+2025-06-09 21:06:43,748 - INFO - │  [DATEI] Seite: 1
+2025-06-09 21:06:43,748 - INFO - │  [STERN] Similarity Score: 0.158312
+2025-06-09 21:06:43,748 - INFO - │  [ID] Node ID: cfb103e1-d984-4132-8c10-53fc9cf86f1d
+2025-06-09 21:06:43,748 - INFO - ├─ [🎯] HEADER-STRUKTUR:
+2025-06-09 21:06:43,748 - INFO - │  [QUALITÄT] Header-Qualität: GOOD
+2025-06-09 21:06:43,748 - INFO - │  [STRUKTUR] Hierarchie-Level: 1
+2025-06-09 21:06:43,748 - INFO - │  [PFAD] Abschnitts-Pfad: Los
+2025-06-09 21:06:43,749 - INFO - │  [TITEL] Verfügbare Überschriften:
+2025-06-09 21:06:43,749 - INFO - │     section_h1: Los
+2025-06-09 21:06:43,749 - INFO - │  [BEWERTUNG] Gesamt-Chunk-Qualität: EXCELLENT
+2025-06-09 21:06:43,749 - INFO - │     Score-Qualität: EXCELLENT
+2025-06-09 21:06:43,749 - INFO - │     Header-Qualität: GOOD
+2025-06-09 21:06:43,749 - INFO - │     Content-Qualität: GOOD
+2025-06-09 21:06:43,749 - INFO - │  [KONTEXT] Vollständige Metadaten:
+2025-06-09 21:06:43,749 - INFO - │     file_path: ./PDFs\monopoly-dm-standard-gebraucht-g046200040.pdf
+2025-06-09 21:06:43,749 - INFO - │     file_directory: ./PDFs
+2025-06-09 21:06:43,749 - INFO - │     filename: monopoly-dm-standard-gebraucht-g046200040.pdf
+2025-06-09 21:06:43,749 - INFO - │     section_title: Die Bedeutung der Felder des Spielplans
+2025-06-09 21:06:43,749 - INFO - │     chunk_index: 4
+2025-06-09 21:06:43,749 - INFO - │     semantic_chunk: True
+2025-06-09 21:06:43,749 - INFO - │     page_number: 1
+2025-06-09 21:06:43,749 - INFO - │     section_h1: Los
+2025-06-09 21:06:43,749 - INFO - │     header_count: 2
+2025-06-09 21:06:43,750 - INFO - │     contains_headers: True
+2025-06-09 21:06:43,750 - INFO - │     first_header: Die Bedeutung der Felder des Spielplans
+2025-06-09 21:06:43,750 - INFO - ├─ CHUNK-TEXT:
+2025-06-09 21:06:43,750 - INFO - │  [TEXT] Text-Länge: 229 Zeichen
+2025-06-09 21:06:43,750 - INFO - │  [DATEI] Vollständiger Text:
+2025-06-09 21:06:43,750 - INFO - │  ──────────────────────────────────────────────────────────────────────
+2025-06-09 21:06:43,750 - INFO - │    1: Die Bedeutung der Felder des Spielplans
+2025-06-09 21:06:43,750 - INFO - │    2: 
+2025-06-09 21:06:43,750 - INFO - │    3: Los Jedesmal wenn ein Spieler mit seiner Figur das Feld „Los" erreicht oder passiert, zahlt ihm der Bankhalter ein Gehalt von 4.000 DM. Dies gilt nur, wenn er sich in Pfeilrichtung bewegt.
+2025-06-09 21:06:43,751 - INFO - │  ──────────────────────────────────────────────────────────────────────
+2025-06-09 21:06:43,751 - INFO - ├─ CHUNK-HASH: 44fb164e
+2025-06-09 21:06:43,751 - INFO - ├─ EMBEDDING: Nicht verfügbar
+2025-06-09 21:06:43,751 - INFO - └─ CHUNK 4 ENDE
+2025-06-09 21:06:43,751 - INFO - ================================================================================
+2025-06-09 21:06:43,752 - INFO - 
+[STATISTIK] ERWEITERTE CHUNK-ZUSAMMENFASSUNG:
+2025-06-09 21:06:43,752 - INFO - ├─ Gesamtanzahl Chunks: 4
+2025-06-09 21:06:43,752 - INFO - ├─ Gesamtzeichen aller Chunks: 2190
+2025-06-09 21:06:43,752 - INFO - ├─ Durchschnittliche Chunk-Größe: 547 Zeichen
+2025-06-09 21:06:43,752 - INFO - 
+[🎯] HEADER-QUALITÄTS-ANALYSE:
+2025-06-09 21:06:43,752 - INFO - ├─ GOOD Header-Qualität: 4 Chunks (100.0%)
+2025-06-09 21:06:43,753 - INFO - 
+[🏆] GESAMT-QUALITÄTS-ANALYSE:
+2025-06-09 21:06:43,753 - INFO - ├─ EXCELLENT Gesamt-Qualität: 3 Chunks (75.0%)
+2025-06-09 21:06:43,753 - INFO - ├─ GOOD Gesamt-Qualität: 1 Chunks (25.0%)
+2025-06-09 21:06:43,753 - INFO - 
+[📚] ABSCHNITTS-ABDECKUNG:
+2025-06-09 21:06:43,753 - INFO - ├─ Anzahl verschiedene Abschnitte: 4
+2025-06-09 21:06:43,753 - INFO - │   - Ausstattung
+2025-06-09 21:06:43,753 - INFO - │   - Das Spiel
+2025-06-09 21:06:43,753 - INFO - │   - Los
+2025-06-09 21:06:43,753 - INFO - │   - Vorbereitung des Spiels
+2025-06-09 21:06:43,753 - INFO - ├─ Hierarchie-Level gefunden: [1]
+2025-06-09 21:06:43,753 - INFO - 
+[📊] SCORE-STATISTIKEN:
+2025-06-09 21:06:43,754 - INFO - ├─ Höchster Score: 0.177528
+2025-06-09 21:06:43,754 - INFO - ├─ Niedrigster Score: 0.158312
+2025-06-09 21:06:43,754 - INFO - ├─ Durchschnittlicher Score: 0.165356
+2025-06-09 21:06:43,754 - INFO - ├─ Exzellente Matches (≤4.0): 4
+2025-06-09 21:06:43,754 - INFO - ├─ Gute Matches (4.0-5.5): 0
+2025-06-09 21:06:43,754 - INFO - ├─ Mittelmäßige Matches (5.5-7.0): 0
+2025-06-09 21:06:43,754 - INFO - └─ Schlechte Matches (>7.0): 0
+2025-06-09 21:06:43,754 - INFO - [OK] Qualitäts-Mix: 4 gute von 4 Chunks
+2025-06-09 21:06:43,754 - INFO - 
+[📁] DATEI-VERTEILUNG:
+2025-06-09 21:06:43,754 - INFO - ├─ Anzahl verschiedener Dateien: 1
+2025-06-09 21:06:43,754 - INFO - └─ Dateien: monopoly-dm-standard-gebraucht-g046200040.pdf
+2025-06-09 21:06:43,754 - INFO - 
+[ANALYSE] CHUNK-VERTEILUNGS-ANALYSE:
+2025-06-09 21:06:43,754 - INFO - ├─ monopoly-dm-standard-gebraucht-g046200040.pdf: 4 Chunks (100.0%)
+2025-06-09 21:06:43,754 - INFO - └─ [OK] Alle Chunks aus einer Datei (gut fokussiert)
+2025-06-09 21:06:43,755 - INFO - 
+--- QUELLEN-INTEGRATION ---
+2025-06-09 21:06:43,755 - INFO - Anzahl eindeutige Quellen: 4
+2025-06-09 21:06:43,755 - INFO - Gefundene Quellen: ['(Abschnitt: "Ausstattung", Quelle: monopoly-dm-standard-gebraucht-g046200040.pdf, Seite: 1)', '(Abschnitt: "Das Spiel", Quelle: monopoly-dm-standard-gebraucht-g046200040.pdf, Seite: 1)', '(Abschnitt: "Los", Quelle: monopoly-dm-standard-gebraucht-g046200040.pdf, Seite: 1)', '(Abschnitt: "Vorbereitung des Spiels", Quelle: monopoly-dm-standard-gebraucht-g046200040.pdf, Seite: 1)']
+2025-06-09 21:06:43,755 - INFO - LLM hat Quellen nicht explizit im Text genannt, füge sie manuell hinzu.
+2025-06-09 21:06:43,756 - INFO - 
+--- CHAT-HISTORY UPDATE ---
+2025-06-09 21:06:43,756 - INFO - Antwort zur Chat-History hinzugefügt
+2025-06-09 21:06:43,756 - INFO - Neue Chat-History Länge: 2 Nachrichten
+2025-06-09 21:06:43,756 - INFO - 
+--- RESPONSE-ERSTELLUNG ---
+2025-06-09 21:06:43,756 - INFO - OpenAI-kompatible Response erstellt
+2025-06-09 21:06:43,756 - INFO - Response-ID: chatcmpl-de4c51ea
+2025-06-09 21:06:43,756 - INFO - Model: llama3.2:1b
+2025-06-09 21:06:43,756 - INFO - Chat-ID: de4c51ea-3b98-44e8-889c-e07e40f96b33
+2025-06-09 21:06:43,756 - DEBUG - [OK] Antwort erfolgreich erstellt
+2025-06-09 21:06:43,762 - INFO - [DATEI] Debug-Datei erstellt: debug_20250609_210643_756
+2025-06-09 21:06:43,763 - INFO - ============================================================
+2025-06-09 21:06:43,763 - INFO - RAG-ANFRAGE ERFOLGREICH ABGESCHLOSSEN
+2025-06-09 21:06:43,763 - INFO - ============================================================

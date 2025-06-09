@@ -30,18 +30,19 @@ def semantic_enhanced_pdf(pdf_path: str) -> List[Document]:
     """
     print(f"[SEMANTIC] Verarbeite {pdf_path} mit semantischer Abschnitts-Gruppierung")
     
-    # 1. Lade PDF-Elemente mit Unstructured
+    # 1. Lade PDF-Elemente mit Unstructured (hi_res für bessere Header-Erkennung)
     try:
         from unstructured.partition.pdf import partition_pdf
         
         elements = partition_pdf(
             filename=pdf_path,
-            strategy="auto",
+            strategy="hi_res",  # Geändert von "auto" zu "hi_res" für bessere Layout-Erkennung
             include_page_breaks=True,
+            include_metadata=True,  # Zusätzliche Metadaten für bessere Header-Erkennung
             combine_text_under_n_chars=0
         )
         
-        print(f"[SEMANTIC] {len(elements)} PDF-Elemente geladen")
+        print(f"[SEMANTIC] {len(elements)} PDF-Elemente geladen (hi_res Strategie)")
         
     except Exception as e:
         print(f"❌ Fehler beim Laden der PDF-Elemente: {str(e)}")
@@ -92,7 +93,7 @@ def group_elements_into_semantic_sections(elements: list) -> List[Dict[str, Any]
             page_number = element.metadata.page_number
         
         # Erkenne Abschnittswechsel (Title-Elemente mit ausreichender Länge)
-        is_new_section = (element_type == "Title" and len(element_text) > 5)
+        is_new_section = (element_type == "Title" and len(element_text) > 3)
         
         if is_new_section:
             # Speichere den vorherigen Chunk wenn er Inhalt hat
@@ -336,7 +337,7 @@ def analyze_hierarchical_headers(elements: list) -> Dict[int, Dict[str, Any]]:
 
 def classify_header_level(element_text: str, element_type: str) -> str:
     """
-    Klassifiziert Header-Ebene basierend auf Text-Eigenschaften.
+    Klassifiziert Header-Ebene basierend auf allgemeinen Text-Eigenschaften.
     
     Args:
         element_text: Text des Elements
@@ -345,26 +346,56 @@ def classify_header_level(element_text: str, element_type: str) -> str:
     Returns:
         str: Header-Level ('h1', 'h2', 'h3', oder 'content')
     """
-    text_lower = element_text.lower().strip()
-    text_length = len(element_text.strip())
+    text_stripped = element_text.strip()
+    text_length = len(text_stripped)
     
-    # Sehr kurze, allgemeine Titel = H1 (Hauptüberschriften)
-    if text_length < 50 and any(keyword in text_lower for keyword in 
-                               ['spielregeln', 'anleitung', 'inhalt', 'ziel', 'vorbereitung']):
-        return 'h1'
+    # Leere oder sehr kurze Texte sind wahrscheinlich kein sinnvoller Header
+    if text_length < 3:
+        return 'content'
     
-    # Mittlere Überschriften = H2 (Abschnitte)
-    elif text_length < 100 and any(keyword in text_lower for keyword in 
-                                  ['spielverlauf', 'aktionskarten', 'sonderkarten', 'punkte']):
+    # Sehr lange Texte sind wahrscheinlich kein Header, sondern Content
+    if text_length > 200:
+        return 'content'
+    
+    # PRIMÄR: Vertraue den von Unstructured erkannten Element-Typen
+    # Diese sind durch OCR und Layout-Analyse bereits gut klassifiziert
+    
+    if element_type == "Title":
+        # Titles sind meist Hauptüberschriften, aber länge Titles können auch H2 sein
+        if text_length <= 50:
+            return 'h1'
+        else:
+            return 'h2'
+    
+    elif element_type == "Header":
+        # Headers sind typischerweise Abschnittsüberschriften
         return 'h2'
     
-    # Detailüberschriften = H3 (Unterabschnitte)
-    elif text_length < 150:
+    elif element_type == "SubHeader":
+        # SubHeaders sind Unterabschnittsüberschriften
         return 'h3'
     
-    # Fallback für sehr lange "Titel" -> wahrscheinlich kein echter Header
-    else:
-        return 'content'
+    # SEKUNDÄR: Fallback-Heuristiken für unklare Element-Typen
+    
+    # Texte in Großbuchstaben sind oft Überschriften
+    if text_stripped.isupper() and text_length <= 100:
+        if text_length <= 30:
+            return 'h1'
+        elif text_length <= 60:
+            return 'h2'
+        else:
+            return 'h3'
+    
+    # Texte, die mit Zahlen oder Buchstaben beginnen (z.B. "1. Einleitung", "A. Grundlagen")
+    import re
+    if re.match(r'^[\d]+\.?\s+', text_stripped) or re.match(r'^[A-Z]\.?\s+', text_stripped):
+        if text_length <= 50:
+            return 'h2'
+        else:
+            return 'h3'
+    
+    # Standard: Normaler Content
+    return 'content'
 
 def print_semantic_analysis_summary(semantic_chunks: List[Dict[str, Any]], documents: List[Document]):
     """
