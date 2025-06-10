@@ -1,5 +1,5 @@
 """
-Unstructured Wrapper für das Parse_Index System
+Unstructured Wrapper für das Parse_Index System als Fallback
 
 Dieses Modul kapselt die direkte Interaktion mit der Unstructured-Bibliothek
 für die PDF-Verarbeitung und -Partitionierung.
@@ -183,7 +183,7 @@ def test_unstructured_strategies(pdf_path: str) -> dict:
         
         start_time = time.time()
         try:
-            documents = process_pdf_with_local_unstructured(pdf_path, strategy_value)
+            documents = fallback_local_unstructured_pdf(pdf_path, strategy_value)
             processing_time = time.time() - start_time
             
             # Analysiere Ergebnisse

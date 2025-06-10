@@ -5,12 +5,13 @@ Dieses Modul enthält Funktionen zur semantischen Anreicherung und Verbesserung
 von PDF-Dokumenten durch:
 - Hierarchische Header-Analyse
 - Semantische Abschnitts-Gruppierung  
+- Tabellen-Erkennung und -Strukturierung
 - Metadaten-Anreicherung
 - Strukturelle Dokumentenverbesserung
 """
 
 import os
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Tuple
 from pathlib import Path
 
 from llama_index.core import Document
@@ -19,18 +20,19 @@ def semantic_enhanced_pdf(pdf_path: str) -> List[Document]:
     """
     Erstellt semantisch sinnvolle Dokument-Chunks durch intelligente Gruppierung.
     
-    Kombiniert zusammengehörige PDF-Elemente zu kohärenten Abschnitten und
-    integriert hierarchische Header-Analyse für reichere Metadaten.
+    Kombiniert zusammengehörige PDF-Elemente zu kohärenten Abschnitten,
+    integriert hierarchische Header-Analyse und erkennt Tabellen für
+    reichere Metadaten und bessere Retrieval-Qualität.
     
     Args:
         pdf_path: Pfad zur PDF-Datei
         
     Returns:
-        Liste von Document-Objekten mit semantischen Abschnitten
+        Liste von Document-Objekten mit semantischen Abschnitten und Tabellen
     """
-    print(f"[SEMANTIC] Verarbeite {pdf_path} mit semantischer Abschnitts-Gruppierung")
+    print(f"[SEMANTIC] Verarbeite {pdf_path} mit semantischer Abschnitts-Gruppierung und Tabellen-Erkennung")
     
-    # 1. Lade PDF-Elemente mit Unstructured (hi_res für bessere Header-Erkennung)
+    # 1. Lade PDF-Elemente mit Unstructured (hi_res für bessere Header- und Tabellen-Erkennung)
     try:
         from unstructured.partition.pdf import partition_pdf
         
@@ -39,10 +41,11 @@ def semantic_enhanced_pdf(pdf_path: str) -> List[Document]:
             strategy="hi_res",  # Geändert von "auto" zu "hi_res" für bessere Layout-Erkennung
             include_page_breaks=True,
             include_metadata=True,  # Zusätzliche Metadaten für bessere Header-Erkennung
-            combine_text_under_n_chars=0
+            combine_text_under_n_chars=0,
+            infer_table_structure=True  # Aktiviert Tabellen-Struktur-Erkennung
         )
         
-        print(f"[SEMANTIC] {len(elements)} PDF-Elemente geladen (hi_res Strategie)")
+        print(f"[SEMANTIC] {len(elements)} PDF-Elemente geladen (hi_res Strategie mit Tabellen-Erkennung)")
         
     except Exception as e:
         print(f"❌ Fehler beim Laden der PDF-Elemente: {str(e)}")
@@ -52,7 +55,7 @@ def semantic_enhanced_pdf(pdf_path: str) -> List[Document]:
     print(f"[SEMANTIC] Starte hierarchische Header-Analyse für bessere Metadaten...")
     header_mapping = analyze_hierarchical_headers(elements)
     
-    # 3. Gruppiere Elemente zu semantischen Abschnitten
+    # 3. Gruppiere Elemente zu semantischen Abschnitten (inkl. Tabellen-Behandlung)
     semantic_chunks = group_elements_into_semantic_sections(elements)
     
     # 4. Konvertiere zu LlamaIndex Documents mit erweiterten Header-Metadaten
@@ -67,9 +70,84 @@ def semantic_enhanced_pdf(pdf_path: str) -> List[Document]:
     
     return documents
 
+def convert_table_to_text_and_meta(table_element) -> Tuple[str, Dict[str, Any]]:
+    """
+    Konvertiert ein Tabellen-Element zu Text und Metadaten.
+    
+    Args:
+        table_element: Unstructured Table-Element
+        
+    Returns:
+        Tuple aus (Markdown-Text, Metadaten-Dict)
+    """
+    try:
+        # Versuche verschiedene Konvertierungsmethoden
+        table_text = ""
+        table_meta = {
+            'is_table': True,
+            'table_extraction_method': 'unknown',
+            'table_rows': 0,
+            'table_cols': 0,
+            'table_quality': 'unknown'
+        }
+        
+        # Methode 1: Markdown-Konvertierung (bevorzugt für Embeddings)
+        try:
+            if hasattr(table_element, 'to_markdown'):
+                table_text = table_element.to_markdown(index=False)
+                table_meta['table_extraction_method'] = 'markdown'
+                print(f"  [TABLE] Markdown-Konvertierung erfolgreich ({len(table_text)} Zeichen)")
+            else:
+                # Fallback: Text-Repräsentation
+                table_text = str(table_element)
+                table_meta['table_extraction_method'] = 'text_fallback'
+                print(f"  [TABLE] Fallback zu Text-Repräsentation ({len(table_text)} Zeichen)")
+        except Exception as e:
+            # Fallback: Einfache String-Konvertierung
+            table_text = str(table_element)
+            table_meta['table_extraction_method'] = 'string_fallback'
+            print(f"  [TABLE] String-Fallback verwendet: {str(e)}")
+        
+        # Schätze Tabellen-Dimensionen aus dem Text
+        if '|' in table_text:
+            lines = [line.strip() for line in table_text.split('\n') if line.strip() and '|' in line]
+            if lines:
+                table_meta['table_rows'] = len(lines) - 1  # Header abziehen
+                # Spalten aus der ersten Zeile schätzen
+                first_line_cols = lines[0].count('|') - 1
+                table_meta['table_cols'] = max(1, first_line_cols)
+        
+        # Qualitätsbewertung
+        if len(table_text) > 50 and table_meta['table_rows'] > 0:
+            table_meta['table_quality'] = 'good'
+        elif len(table_text) > 20:
+            table_meta['table_quality'] = 'medium'
+        else:
+            table_meta['table_quality'] = 'poor'
+        
+        # Zusätzliche Metadaten
+        table_meta['table_text_length'] = len(table_text)
+        table_meta['content_type'] = 'table'
+        
+        return table_text, table_meta
+        
+    except Exception as e:
+        print(f"❌ Fehler bei Tabellen-Konvertierung: {str(e)}")
+        # Notfall-Fallback
+        fallback_text = str(table_element)
+        fallback_meta = {
+            'is_table': True,
+            'table_extraction_method': 'error_fallback',
+            'table_quality': 'poor',
+            'content_type': 'table',
+            'extraction_error': str(e)
+        }
+        return fallback_text, fallback_meta
+
 def group_elements_into_semantic_sections(elements: list) -> List[Dict[str, Any]]:
     """
     Gruppiert PDF-Elemente zu semantisch zusammengehörigen Abschnitten.
+    Behandelt Tabellen als separate, eigenständige Chunks.
     
     Args:
         elements: Liste von Unstructured-PDF-Elementen
@@ -83,6 +161,8 @@ def group_elements_into_semantic_sections(elements: list) -> List[Dict[str, Any]
     current_page = None
     current_element_indices = []
     
+    tables_found = 0
+    
     for i, element in enumerate(elements):
         element_text = str(element).strip()
         element_type = type(element).__name__
@@ -92,8 +172,50 @@ def group_elements_into_semantic_sections(elements: list) -> List[Dict[str, Any]
         if hasattr(element, 'metadata') and element.metadata and hasattr(element.metadata, 'page_number'):
             page_number = element.metadata.page_number
         
-        # Erkenne Abschnittswechsel (Title-Elemente mit ausreichender Länge)
-        is_new_section = (element_type == "Title" and len(element_text) > 3)
+        # **TABELLEN-BEHANDLUNG**: Erkenne Tabellen-Elemente
+        if element_type in ['Table', 'TableChunk']:
+            # Speichere den vorherigen Chunk wenn er Inhalt hat
+            if current_chunk.strip() and len(current_chunk.strip()) > 50:
+                semantic_chunks.append({
+                    'text': current_chunk.strip(),
+                    'section': current_section or "Unnamed Section",
+                    'page_number': current_page,
+                    'length': len(current_chunk.strip()),
+                    'element_indices': current_element_indices.copy(),
+                    'is_table': False
+                })
+            
+            # Verarbeite die Tabelle als eigenen Chunk
+            table_text, table_metadata = convert_table_to_text_and_meta(element)
+            
+            tables_found += 1
+            table_section = f"Tabelle {tables_found}" + (f" (Seite {page_number})" if page_number else "")
+            
+            # Erstelle Tabellen-Chunk
+            table_chunk = {
+                'text': table_text,
+                'section': table_section,
+                'page_number': page_number,
+                'length': len(table_text),
+                'element_indices': [i],
+                'is_table': True
+            }
+            # Füge alle Tabellen-Metadaten hinzu
+            table_chunk.update(table_metadata)
+            
+            semantic_chunks.append(table_chunk)
+            print(f"  [TABLE] Tabelle {tables_found} erkannt: {element_type} → {table_metadata['table_quality']} Qualität")
+            
+            # Reset für nächsten Chunk
+            current_chunk = ""
+            current_section = None
+            current_page = page_number
+            current_element_indices = []
+            continue
+        
+        # Erkenne Abschnittswechsel basierend auf Header-Klassifikation
+        header_level = classify_header_level(element_text, element_type)
+        is_new_section = header_level in ['h1', 'h2']
         
         if is_new_section:
             # Speichere den vorherigen Chunk wenn er Inhalt hat
@@ -103,7 +225,8 @@ def group_elements_into_semantic_sections(elements: list) -> List[Dict[str, Any]
                     'section': current_section or "Unnamed Section",
                     'page_number': current_page,
                     'length': len(current_chunk.strip()),
-                    'element_indices': current_element_indices.copy()
+                    'element_indices': current_element_indices.copy(),
+                    'is_table': False
                 })
             
             # Starte neuen Chunk
@@ -112,9 +235,21 @@ def group_elements_into_semantic_sections(elements: list) -> List[Dict[str, Any]
             current_chunk = element_text + "\n\n"
             current_element_indices = [i]
         else:
-            # Füge zum aktuellen Chunk hinzu
-            if element_text and len(element_text.strip()) > 2:
-                current_chunk += element_text + " "
+            # Füge nur saubere Texte zum aktuellen Chunk hinzu
+            import re
+            cleaned = element_text.strip()
+            # Ausschluss: sehr kurzer Text, hoher Sonderzeichenanteil, typische Fußnoten- oder Kopfzeilensignaturen
+            non_alpha_ratio = sum(1 for c in cleaned if not c.isalnum() and c not in {'.', ',', ';', ':', '-', ' '}) / max(len(cleaned), 1)
+
+            is_noise = (
+                len(cleaned) < 5 or
+                non_alpha_ratio > 0.5 or
+                re.match(r'^\d+$', cleaned) is not None or   # reine Zahlen
+                re.match(r'^Copyright', cleaned, flags=re.IGNORECASE) is not None
+            )
+
+            if cleaned and not is_noise:
+                current_chunk += cleaned + " "
                 current_element_indices.append(i)
                 # Update page number if available
                 if page_number and not current_page:
@@ -127,9 +262,11 @@ def group_elements_into_semantic_sections(elements: list) -> List[Dict[str, Any]
             'section': current_section or "Final Section",
             'page_number': current_page,
             'length': len(current_chunk.strip()),
-            'element_indices': current_element_indices.copy()
+            'element_indices': current_element_indices.copy(),
+            'is_table': False
         })
     
+    print(f"[SEMANTIC] {tables_found} Tabellen als separate Chunks erkannt")
     return semantic_chunks
 
 def convert_semantic_chunks_to_documents(
@@ -140,6 +277,7 @@ def convert_semantic_chunks_to_documents(
 ) -> List[Document]:
     """
     Konvertiert semantische Chunks zu LlamaIndex Documents mit Header-Metadaten.
+    Behandelt Tabellen-Chunks mit speziellen Metadaten.
     
     Args:
         semantic_chunks: Liste von semantischen Chunk-Dictionaries
@@ -168,15 +306,27 @@ def convert_semantic_chunks_to_documents(
         if chunk['page_number'] is not None:
             metadata["page_number"] = chunk['page_number']
         
-        # Integriere hierarchische Header-Metadaten
-        chunk_header_info = extract_header_info_for_chunk(
-            chunk['element_indices'], 
-            header_mapping, 
-            elements
-        )
-        
-        # Füge Header-Metadaten zu den Dokument-Metadaten hinzu
-        metadata.update(chunk_header_info)
+        # **TABELLEN-SPEZIFISCHE METADATEN**
+        if chunk.get('is_table', False):
+            # Füge alle Tabellen-Metadaten hinzu
+            for key, value in chunk.items():
+                if key.startswith('table_') or key in ['is_table', 'content_type', 'extraction_error']:
+                    # Nur einfache Datentypen für ChromaDB
+                    if isinstance(value, (str, int, float, bool)):
+                        metadata[key] = value
+            
+            print(f"  [TABLE-DOC] Tabellen-Document erstellt: {chunk.get('table_rows', 0)}x{chunk.get('table_cols', 0)} - {chunk.get('table_quality', 'unknown')} Qualität")
+        else:
+            # Normale Chunks: Integriere hierarchische Header-Metadaten
+            chunk_header_info = extract_header_info_for_chunk(
+                chunk['element_indices'], 
+                header_mapping, 
+                elements
+            )
+            
+            # Füge Header-Metadaten zu den Dokument-Metadaten hinzu
+            metadata.update(chunk_header_info)
+            metadata['content_type'] = 'text'
         
         document = Document(
             text=chunk['text'],
@@ -284,12 +434,13 @@ def analyze_hierarchical_headers(elements: list) -> Dict[int, Dict[str, Any]]:
         element_text = str(element).strip()
         element_type = type(element).__name__
         
-        # Prüfe ob Element eine Überschrift ist
-        is_header = element_type in ['Title', 'Header'] and len(element_text) > 0
+        # Kandidat für Header? (Nur Title / Header Elemente berücksichtigen)
+        header_level = classify_header_level(element_text, element_type)
+        
+        # Ein Element gilt nur dann als Header, wenn die Klassifikation h1/h2/h3 zurückgibt
+        is_header = header_level in ['h1', 'h2', 'h3']
         
         if is_header:
-            header_level = classify_header_level(element_text, element_type)
-            
             if header_level == 'h1':
                 # Neue Hauptüberschrift - Reset aller Sub-Header
                 current_headers['h1'] = element_text
@@ -346,68 +497,109 @@ def classify_header_level(element_text: str, element_type: str) -> str:
     Returns:
         str: Header-Level ('h1', 'h2', 'h3', oder 'content')
     """
-    text_stripped = element_text.strip()
-    text_length = len(text_stripped)
-    
-    # Leere oder sehr kurze Texte sind wahrscheinlich kein sinnvoller Header
-    if text_length < 3:
-        return 'content'
-    
-    # Sehr lange Texte sind wahrscheinlich kein Header, sondern Content
-    if text_length > 200:
-        return 'content'
-    
-    # PRIMÄR: Vertraue den von Unstructured erkannten Element-Typen
-    # Diese sind durch OCR und Layout-Analyse bereits gut klassifiziert
-    
-    if element_type == "Title":
-        # Titles sind meist Hauptüberschriften, aber länge Titles können auch H2 sein
-        if text_length <= 50:
-            return 'h1'
-        else:
-            return 'h2'
-    
-    elif element_type == "Header":
-        # Headers sind typischerweise Abschnittsüberschriften
-        return 'h2'
-    
-    elif element_type == "SubHeader":
-        # SubHeaders sind Unterabschnittsüberschriften
-        return 'h3'
-    
-    # SEKUNDÄR: Fallback-Heuristiken für unklare Element-Typen
-    
-    # Texte in Großbuchstaben sind oft Überschriften
-    if text_stripped.isupper() and text_length <= 100:
-        if text_length <= 30:
-            return 'h1'
-        elif text_length <= 60:
-            return 'h2'
-        else:
-            return 'h3'
-    
-    # Texte, die mit Zahlen oder Buchstaben beginnen (z.B. "1. Einleitung", "A. Grundlagen")
     import re
-    if re.match(r'^[\d]+\.?\s+', text_stripped) or re.match(r'^[A-Z]\.?\s+', text_stripped):
-        if text_length <= 50:
+
+    text_stripped: str = element_text.strip()
+    text_length: int = len(text_stripped)
+
+    # ---------- Frühzeitige Filter ------------------------------------------------
+    # 1) Unplausible Längen
+    if text_length < 3 or text_length > 200:
+        return 'content'
+
+    # 2) OCR-Rauschen: hoher Anteil Sonderzeichen
+    non_alpha_ratio = sum(1 for c in text_stripped if not c.isalnum() and c not in {'.', '-', ' ', ':'}) / text_length
+    if non_alpha_ratio > 0.4:
+        return 'content'
+
+    # 3) Typische Autorenzeile (viele Kommas oder Sonderzeichen † ‡)
+    if (text_stripped.count(',') >= 2 and '@' not in text_stripped) or any(sym in text_stripped for sym in '†‡'):
+        return 'content'
+
+    # 4) Abkürzungszeilen in Großbuchstaben (≥3 Wörter, Ø Wortlänge ≤4) → wahrscheinlich Tabelle/Legende
+    if text_stripped.isupper():
+        tokens = text_stripped.split()
+        if len(tokens) >= 3 and (sum(len(t) for t in tokens) / len(tokens)) <= 4:
+            return 'content'
+
+    # ---------- Numerische/Römische Gliederungen ----------------------------------
+    numeric_match = re.match(r'^(?P<num_seq>\d+(?:\.\d+)*)(?:\.)?\s+.+', text_stripped)
+    if numeric_match:
+        seq = numeric_match.group('num_seq')
+        depth_segments = seq.count('.') + 1  # "2" =>1, "2.1"=>2, "2.1.3"=>3
+        if depth_segments == 1:
+            return 'h1'
+        elif depth_segments == 2:
             return 'h2'
         else:
             return 'h3'
-    
-    # Standard: Normaler Content
+
+    roman_match = re.match(r'^([IVXLC]+)(?:\.|\))?\s+.+', text_stripped, flags=re.IGNORECASE)
+    if roman_match:
+        return 'h1'
+
+    # ---------- Groß/Klein-Schreibung & Element-Typ --------------------------------
+    if element_type == 'Title':
+        # Typische Kapitelüberschriften ohne Numerierung explizit als H1 zulassen
+        top_level_keywords = {
+            'abstract', 'introduction', 'methods', 'method', 'materials', 'results',
+            'discussion', 'conclusion', 'conclusions', 'related work', 'acknowledgments',
+            'acknowledgements', 'references', 'background'
+        }
+        if text_stripped.lower() in top_level_keywords:
+            return 'h1'
+        # Andernfalls konservativ H2
+        return 'h2'
+    if element_type == 'Header':
+        return 'h2'
+    if element_type == 'SubHeader':
+        return 'h3'
+
+    # ---------- Weitere Heuristiken ------------------------------------------------
+    # Einzelnes Großwort (<=4 Zeichen) → wahrscheinlich Content (z. B. Tabellenkennung)
+    if text_stripped.isupper() and len(text_stripped.split()) == 1 and text_length <= 4:
+        return 'content'
+
+    # Buchstabenpräfix ("A. Grundlagen")
+    if re.match(r'^[A-Z]\.\s+.+', text_stripped):
+        return 'h2'
+
+    # Fallback → Content
     return 'content'
 
 def print_semantic_analysis_summary(semantic_chunks: List[Dict[str, Any]], documents: List[Document]):
     """
     Gibt eine Zusammenfassung der semantischen Analyse aus.
+    Inkludiert Tabellen-Statistiken.
     
     Args:
         semantic_chunks: Liste der semantischen Chunks
         documents: Liste der erstellten Documents
     """
-    print(f"[SEMANTIC] {len(semantic_chunks)} semantische Abschnitte erstellt:")
-    for i, chunk in enumerate(semantic_chunks):
-        print(f"  - Abschnitt {i+1}: '{chunk['section']}' ({chunk['length']} Zeichen)")
+    # Basis-Statistiken
+    total_chunks = len(semantic_chunks)
+    table_chunks = [chunk for chunk in semantic_chunks if chunk.get('is_table', False)]
+    text_chunks = [chunk for chunk in semantic_chunks if not chunk.get('is_table', False)]
+    
+    print(f"[SEMANTIC] {total_chunks} semantische Abschnitte erstellt:")
+    print(f"  - Text-Abschnitte: {len(text_chunks)}")
+    print(f"  - Tabellen-Abschnitte: {len(table_chunks)}")
+    
+    # Text-Chunks
+    for i, chunk in enumerate(text_chunks[:3]):  # Nur erste 3 anzeigen
+        print(f"    Text {i+1}: '{chunk['section']}' ({chunk['length']} Zeichen)")
+    if len(text_chunks) > 3:
+        print(f"    ... und {len(text_chunks)-3} weitere Text-Abschnitte")
+    
+    # Tabellen-Chunks
+    if table_chunks:
+        print(f"  [TABELLEN] Erkannte Tabellen:")
+        for i, table in enumerate(table_chunks):
+            quality = table.get('table_quality', 'unknown')
+            rows = table.get('table_rows', '?')
+            cols = table.get('table_cols', '?')
+            method = table.get('table_extraction_method', 'unknown')
+            print(f"    Tabelle {i+1}: {rows}x{cols} Zellen - {quality} Qualität ({method})")
     
     # Header-Integration Statistiken
     header_enriched_chunks = [d for d in documents if d.metadata.get('contains_headers')]
@@ -457,6 +649,7 @@ def enrich_document_metadata(document: Document, additional_metadata: Dict[str, 
 def validate_document_quality(documents: List[Document]) -> Dict[str, Any]:
     """
     Validiert die Qualität der erstellten Dokumente.
+    Inkludiert Tabellen-spezifische Qualitäts-Checks.
     
     Args:
         documents: Liste der zu validierenden Dokumente
@@ -467,8 +660,14 @@ def validate_document_quality(documents: List[Document]) -> Dict[str, Any]:
     if not documents:
         return {'valid': False, 'error': 'Keine Dokumente vorhanden'}
     
+    # Basis-Metriken
+    table_docs = [d for d in documents if d.metadata.get('is_table', False)]
+    text_docs = [d for d in documents if not d.metadata.get('is_table', False)]
+    
     quality_metrics = {
         'total_documents': len(documents),
+        'text_documents': len(text_docs),
+        'table_documents': len(table_docs),
         'avg_text_length': sum(len(doc.text) for doc in documents) / len(documents),
         'documents_with_pages': len([d for d in documents if d.metadata.get('page_number')]),
         'documents_with_headers': len([d for d in documents if d.metadata.get('contains_headers')]),
@@ -476,6 +675,34 @@ def validate_document_quality(documents: List[Document]) -> Dict[str, Any]:
         'empty_documents': len([d for d in documents if not d.text.strip()]),
         'valid': True
     }
+    
+    # **TABELLEN-SPEZIFISCHE METRIKEN**
+    if table_docs:
+        table_qualities = [d.metadata.get('table_quality', 'unknown') for d in table_docs]
+        good_tables = len([q for q in table_qualities if q == 'good'])
+        medium_tables = len([q for q in table_qualities if q == 'medium'])
+        poor_tables = len([q for q in table_qualities if q == 'poor'])
+        
+        total_table_rows = sum(d.metadata.get('table_rows', 0) for d in table_docs)
+        total_table_cols = sum(d.metadata.get('table_cols', 0) for d in table_docs)
+        
+        quality_metrics.update({
+            'tables_good_quality': good_tables,
+            'tables_medium_quality': medium_tables,
+            'tables_poor_quality': poor_tables,
+            'avg_table_rows': total_table_rows / len(table_docs) if table_docs else 0,
+            'avg_table_cols': total_table_cols / len(table_docs) if table_docs else 0,
+            'table_extraction_success_rate': (good_tables + medium_tables) / len(table_docs) if table_docs else 0
+        })
+    else:
+        quality_metrics.update({
+            'tables_good_quality': 0,
+            'tables_medium_quality': 0,
+            'tables_poor_quality': 0,
+            'avg_table_rows': 0,
+            'avg_table_cols': 0,
+            'table_extraction_success_rate': 0
+        })
     
     # Qualitätswarnungen
     warnings = []
@@ -488,6 +715,14 @@ def validate_document_quality(documents: List[Document]) -> Dict[str, Any]:
     if quality_metrics['avg_text_length'] < 100:
         warnings.append("Durchschnittliche Textlänge sehr kurz (< 100 Zeichen)")
     
+    # Tabellen-Warnungen
+    if table_docs:
+        if quality_metrics['table_extraction_success_rate'] < 0.7:
+            warnings.append(f"Nur {quality_metrics['table_extraction_success_rate']:.1%} der Tabellen haben gute/mittlere Qualität")
+        
+        if quality_metrics['tables_poor_quality'] > 0:
+            warnings.append(f"{quality_metrics['tables_poor_quality']} Tabellen mit schlechter Qualität gefunden")
+    
     quality_metrics['warnings'] = warnings
     quality_metrics['quality_score'] = calculate_quality_score(quality_metrics)
     
@@ -496,6 +731,7 @@ def validate_document_quality(documents: List[Document]) -> Dict[str, Any]:
 def calculate_quality_score(metrics: Dict[str, Any]) -> float:
     """
     Berechnet einen Qualitäts-Score für die Dokumente (0-100).
+    Berücksichtigt auch Tabellen-Qualität.
     
     Args:
         metrics: Qualitäts-Metriken
@@ -517,5 +753,16 @@ def calculate_quality_score(metrics: Dict[str, Any]) -> float:
     
     if metrics['unique_sections'] < 2:
         score -= 10
+    
+    # **TABELLEN-QUALITÄTS-BEWERTUNG**
+    if metrics['table_documents'] > 0:
+        table_success_rate = metrics['table_extraction_success_rate']
+        if table_success_rate < 0.5:
+            score -= 15  # Starker Abzug für schlechte Tabellen-Extraktion
+        elif table_success_rate < 0.8:
+            score -= 8   # Mittlerer Abzug
+        # Bonus für gute Tabellen-Extraktion
+        elif table_success_rate > 0.9:
+            score += 5
     
     return max(0.0, score) 
