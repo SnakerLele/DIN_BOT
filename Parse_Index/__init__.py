@@ -8,7 +8,7 @@ Hauptmodule:
 - config: Konfigurationsvariablen
 - utils: Hilfsfunktionen (GPU-Check, Requirements, etc.)
 - unstructured_wrapper: Unstructured-Integration
-- document_enhancer: Semantische Dokumentverarbeitung
+- pdf_enhancer: Semantische Dokumentverarbeitung
 - node_parsers: LlamaIndex Parser-Systeme
 - main_parser: Hauptorchestrierung
 """
@@ -23,7 +23,7 @@ from .config import (
 )
 from .utils import check_embedding_requirements, check_gpu_status
 from .node_parsers import create_hybrid_parser_system
-from .document_enhancer import semantic_enhanced_pdf
+from .pdf_enhancer import semantic_enhanced_pdf
 from .unstructured_wrapper import fallback_local_unstructured_pdf
 
 __version__ = "1.0.0"

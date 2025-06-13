@@ -17,7 +17,7 @@ from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from .config import PDF_FOLDER, PERSIST_DIR, COLLECTION_NAME, EMBED_MODEL_NAME
 from .utils import validate_environment
 from .node_parsers import create_hybrid_parser_system
-from .document_enhancer import semantic_enhanced_pdf
+from .pdf_enhancer import semantic_enhanced_pdf, enhanced_table_extraction, create_table_nodes_from_img2table
 from .unstructured_wrapper import fallback_local_unstructured_pdf
 
 def main():
@@ -97,7 +97,7 @@ def setup_llama_index_settings():
     return parser_system
 
 def load_and_process_pdfs():
-    """Lädt und verarbeitet alle PDFs im PDF-Ordner."""
+    """Lädt und verarbeitet alle PDFs im PDF-Ordner mit verbesserter Tabellen-Extraktion."""
     print("3. Lade PDFs...")
     
     if not os.path.exists(PDF_FOLDER):
@@ -111,21 +111,69 @@ def load_and_process_pdfs():
         return []
 
     documents = []
+    total_tables_extracted = 0
+    
     for pdf_file in pdf_files:
         pdf_path = os.path.join(PDF_FOLDER, pdf_file)
+        file_documents = []
+        
         try:
-            # Verwende semantische Dokumentverbesserung
-            file_documents = semantic_enhanced_pdf(pdf_path)
-            if not file_documents:
+            print(f"\n📄 Verarbeite: {pdf_file}")
+            
+            # Schritt 1: Normale Dokumentverarbeitung (Text, etc.)
+            print("  🔍 Normale Dokumentverarbeitung...")
+            base_documents = semantic_enhanced_pdf(pdf_path)
+            if not base_documents:
                 # Fallback auf normale Unstructured-Verarbeitung
-                file_documents = fallback_local_unstructured_pdf(pdf_path)
+                base_documents = fallback_local_unstructured_pdf(pdf_path)
+            
+            file_documents.extend(base_documents)
+            print(f"  ✓ {len(base_documents)} Basis-Dokumente extrahiert")
+            
+            # Schritt 2: Erweiterte Tabellen-Extraktion mit img2table
+            print("  📊 img2table Tabellen-Extraktion...")
+            try:
+                from pathlib import Path
+                tables, table_metadata = enhanced_table_extraction(
+                    Path(pdf_path),
+                    prefer_img2table=True,
+                    fallback_to_unstructured=False
+                )
+                
+                if tables:
+                    # Erstelle spezielle Table-Nodes
+                    table_nodes = create_table_nodes_from_img2table(
+                        tables, table_metadata, pdf_file
+                    )
+                    
+                    # Konvertiere Table-Nodes zu Documents
+                    table_documents = []
+                    for node in table_nodes:
+                        doc = Document(
+                            text=node['text'],
+                            metadata=node['metadata']
+                        )
+                        table_documents.append(doc)
+                    
+                    file_documents.extend(table_documents)
+                    total_tables_extracted += len(tables)
+                    print(f"  ✅ {len(tables)} Tabellen als separate Dokumente hinzugefügt")
+                else:
+                    print("  ℹ️ Keine Tabellen mit img2table gefunden")
+                    
+            except Exception as table_error:
+                print(f"  ⚠️ img2table Extraktion fehlgeschlagen: {table_error}")
+                # Kein kritischer Fehler - weitermachen ohne Tabellen
             
             documents.extend(file_documents)
-            print(f"✓ {pdf_file}: {len(file_documents)} Dokumente")
+            print(f"✓ {pdf_file}: {len(file_documents)} Dokumente gesamt")
+            
         except Exception as e:
             print(f"❌ Fehler bei {pdf_file}: {str(e)}")
     
-    print(f"Gesamt: {len(documents)} Dokumente geladen")
+    print(f"\n🎯 Verarbeitung abgeschlossen:")
+    print(f"   - Gesamt: {len(documents)} Dokumente geladen")
+    print(f"   - Tabellen: {total_tables_extracted} img2table Extrakte")
     return documents
 
 def create_vector_index(documents, storage_context, parser_system):
