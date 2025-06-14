@@ -10,6 +10,9 @@ PDF_FOLDER = "./PDFs"  # Ordner für PDF-Dateien
 PERSIST_DIR = "./chroma_db_store"  # Persistente Speicherung der Vektordatenbank
 COLLECTION_NAME = "test_collection"  # Name der ChromaDB Collection
 
+# Parser-Auswahl
+DOC_PARSER = "docling"  # "docling" oder "legacy" (für alte pdf_enhancer)
+
 # Embedding-Model Konfiguration
 # Bewährtes multilinguales Embedding-Modell für deutsche Inhalte
 EMBED_MODEL_NAME = "sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
@@ -24,7 +27,22 @@ CHUNK_SIZES_CONFIG = {
     "chunk_size_large": 2048,   # Große Chunks für umfassenden Kontext
 }
 
-# Unstructured-Konfiguration
+# Docling-Konfiguration (NEU)
+DOCLING_CONFIG = {
+    "ocr_enabled": True,                    # OCR für gescannte PDFs aktivieren
+    "table_extraction": True,               # Tabellen-Extraktion aktivieren
+    "image_extraction": True,               # Bilder-Extraktion aktivieren
+    "formula_extraction": True,             # Formel-Extraktion aktivieren
+    "layout_analysis": True,                # Layout-Analyse für bessere Struktur
+    "reading_order": True,                  # Lesereihenfolge berücksichtigen
+    "export_format": "markdown",            # "markdown", "html", "json"
+    "chunk_by_page": False,                 # Pro Seite chunken oder semantisch
+    "preserve_formatting": True,            # Formatierung beibehalten
+    "extract_metadata": True,               # Titel, Autor etc. extrahieren (wenn verfügbar)
+}
+
+# DEPRECATED: Unstructured-Konfiguration (wird in zukünftigen Versionen entfernt)
+# Verwende stattdessen DOCLING_CONFIG
 UNSTRUCTURED_STRATEGIES = {
     "primary": "auto",      # Hauptstrategie: Automatische Wahl
     "fallback": "hi_res",   # Fallback bei Problemen: High-Resolution OCR
@@ -39,7 +57,8 @@ CHROMA_CONFIG = {
     "metadata_fields": [
         "file_path", "filename", "page_number", 
         "section_h1", "section_h2", "section_h3", 
-        "current_section", "element_type"
+        "current_section", "element_type", "docling_type",
+        "table_id", "image_id", "formula_id"  # Neue Docling-Metadaten
     ]
 }
 

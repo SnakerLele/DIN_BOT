@@ -1,4 +1,7 @@
-# Python-Abhängigkeiten für PDF-Verarbeitung mit unstructured und GPU-Support
+# Python-Abhängigkeiten für PDF-Verarbeitung mit Docling und GPU-Support
+# Moderne PDF-Verarbeitung mit Docling (ersetzt unstructured)
+docling>=2.36.0
+# Legacy-Support (wird deprecated)
 unstructured[pdf]
 llama-index
 llama-index-vector-stores-chroma

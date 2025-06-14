@@ -2,32 +2,65 @@
 Main Parser für das Parse_Index System
 
 Hauptorchestrierung des PDF-Parsing und Indexierung-Prozesses.
+Unterstützt sowohl moderne Docling-Integration als auch Legacy-Modus.
 """
 
 import os
 import chromadb
 import torch
 import traceback
+import warnings
 from typing import List
 
 from llama_index.core import Document, VectorStoreIndex, StorageContext, Settings
 from llama_index.vector_stores.chroma import ChromaVectorStore
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 
-from .config import PDF_FOLDER, PERSIST_DIR, COLLECTION_NAME, EMBED_MODEL_NAME
+from .config import (
+    PDF_FOLDER, PERSIST_DIR, COLLECTION_NAME, EMBED_MODEL_NAME, 
+    DOC_PARSER, DOCLING_CONFIG
+)
 from .utils import validate_environment
 from .node_parsers import create_hybrid_parser_system
-from .pdf_enhancer import semantic_enhanced_pdf, enhanced_table_extraction, create_table_nodes_from_img2table
-from .unstructured_wrapper import fallback_local_unstructured_pdf
+
+# Docling-Integration (Standard)
+try:
+    from .docling_adapter import DoclingAdapter, parse_pdf_to_documents
+    DOCLING_AVAILABLE = True
+except ImportError:
+    DOCLING_AVAILABLE = False
+    warnings.warn(
+        "Docling-Adapter nicht verfügbar. Fallback auf Legacy-Modus. "
+        "Installiere 'docling' für erweiterte PDF-Verarbeitung.",
+        UserWarning
+    )
+
+# Legacy-Fallback (wird deprecated)
+if not DOCLING_AVAILABLE or DOC_PARSER == "legacy":
+    try:
+        from .pdf_enhancer import semantic_enhanced_pdf, enhanced_table_extraction, create_table_nodes_from_img2table
+        from .unstructured_wrapper import fallback_local_unstructured_pdf
+        LEGACY_AVAILABLE = True
+    except ImportError:
+        LEGACY_AVAILABLE = False
 
 def main():
     """Hauptfunktion für die PDF-Indexierung."""
     print("=== Start der PDF-Indexierung ===")
+    print(f"Parser-Modus: {DOC_PARSER}")
     
     # Validiere Umgebung
     validation_results = validate_environment()
     if not validation_results["requirements_ok"]:
         print("❌ Abbruch: Nicht alle erforderlichen Bibliotheken verfügbar.")
+        return
+    
+    # Prüfe Parser-Verfügbarkeit
+    if DOC_PARSER == "docling" and not DOCLING_AVAILABLE:
+        print("❌ Docling nicht verfügbar. Setze DOC_PARSER='legacy' oder installiere docling.")
+        return
+    elif DOC_PARSER == "legacy" and not LEGACY_AVAILABLE:
+        print("❌ Legacy-Parser nicht verfügbar.")
         return
     
     try:
@@ -97,7 +130,7 @@ def setup_llama_index_settings():
     return parser_system
 
 def load_and_process_pdfs():
-    """Lädt und verarbeitet alle PDFs im PDF-Ordner mit verbesserter Tabellen-Extraktion."""
+    """Lädt und verarbeitet alle PDFs im PDF-Ordner."""
     print("3. Lade PDFs...")
     
     if not os.path.exists(PDF_FOLDER):
@@ -110,6 +143,56 @@ def load_and_process_pdfs():
         print("Keine PDF-Dateien gefunden!")
         return []
 
+    documents = []
+    
+    # Wähle Parser-Strategie
+    if DOC_PARSER == "docling" and DOCLING_AVAILABLE:
+        documents = process_pdfs_with_docling(pdf_files)
+    else:
+        documents = process_pdfs_legacy(pdf_files)
+    
+    print(f"\n🎯 Verarbeitung abgeschlossen: {len(documents)} Dokumente geladen")
+    return documents
+
+def process_pdfs_with_docling(pdf_files: List[str]) -> List[Document]:
+    """Verarbeitet PDFs mit dem modernen Docling-Adapter."""
+    print("📄 Verwende Docling für PDF-Verarbeitung...")
+    
+    documents = []
+    adapter = DoclingAdapter(config=DOCLING_CONFIG)
+    
+    for pdf_file in pdf_files:
+        pdf_path = os.path.join(PDF_FOLDER, pdf_file)
+        
+        try:
+            print(f"\n📄 Verarbeite: {pdf_file}")
+            
+            # Docling-Verarbeitung
+            file_documents = adapter.parse_pdf(pdf_path)
+            documents.extend(file_documents)
+            
+            print(f"✓ {pdf_file}: {len(file_documents)} Dokumente extrahiert")
+            
+            # Zeige Statistiken
+            stats = adapter.get_last_processing_stats()
+            if stats:
+                print(f"  📊 Tabellen: {stats.get('tables', 0)}")
+                print(f"  🖼️ Bilder: {stats.get('images', 0)}")
+                print(f"  📐 Formeln: {stats.get('formulas', 0)}")
+                print(f"  📄 Seiten: {stats.get('pages', 0)}")
+            
+        except Exception as e:
+            print(f"❌ Fehler bei {pdf_file}: {str(e)}")
+            # Optional: Fallback auf Legacy-Modus für diese Datei
+            continue
+    
+    return documents
+
+def process_pdfs_legacy(pdf_files: List[str]) -> List[Document]:
+    """Verarbeitet PDFs mit dem Legacy-System (DEPRECATED)."""
+    print("⚠️ Verwende Legacy-Parser (DEPRECATED)")
+    print("   Empfehlung: Wechsel zu DOC_PARSER='docling' für bessere Ergebnisse")
+    
     documents = []
     total_tables_extracted = 0
     
@@ -171,8 +254,6 @@ def load_and_process_pdfs():
         except Exception as e:
             print(f"❌ Fehler bei {pdf_file}: {str(e)}")
     
-    print(f"\n🎯 Verarbeitung abgeschlossen:")
-    print(f"   - Gesamt: {len(documents)} Dokumente geladen")
     print(f"   - Tabellen: {total_tables_extracted} img2table Extrakte")
     return documents
 

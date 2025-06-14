@@ -1,0 +1,43 @@
+adapter.py
+
+‐ Klasse DoclingAdapter
+nimmt optional config: dict, fällt zurück auf config.DOCLING_CONFIG
+hält einen Docling-DocumentReader (z.B. DoclingPdfReader)
+Methode parse_pdf(path) -> list[Document]
+ruft Docling, erhält DoclingDocument
+lässt über SectionExtractor granulare Blöcke erzeugen
+reichert durch MetadataExtractor an
+ruft QualityAnalyzer für Stats
+wandelt Block-Texte zu llama_index.core.Document
+speichert letzte Stats für get_last_processing_stats()
+Methode get_last_processing_stats() -> dict
+CLI-Hook (Argument-Parser)
+quality.py
+
+‐ Klasse QualityAnalyzer
+Methode analyze(docling_doc) -> dict:
+zählt Seiten, Blöcke, OCR-Blöcke (Docling flaggt source=ocr)
+heuristisch: bad_resolution_pages (<150 DPI?)
+liefert Score 0…1 + Detail-Dict
+Methode needs_ocr() evtl.
+sectionizer.py
+
+‐ Klasse SectionExtractor
+Konstruktor kann Strategien wählen: by_heading, by_page, hybrid
+Methode split(docling_doc) -> list[dict]
+Jeder Rückgabe-Dict enthält: text, page, section_h1/h2/h3, block_type, ggf. table_id
+Nutzt Docling Layout-Infos (heading_level, table, code, image, …)
+metadata.py
+
+‐ Klasse MetadataExtractor
+Versucht zuerst docling_doc.metadata (falls future-Feature)
+Fallback: PyPDF2.PdfReader(...).metadata
+Zusätzliche Heuristiken (Titel aus größter Schrift in Seite 1)
+Liefert Dict mit Titel, Autor, Jahr, Norm-Nummer, DOI
+utils.py
+‐ setup_logging(level) → Rich / logging module
+‐ validate_docling_config(cfg) -> bool
+‐ slugify(text)
+‐ chunk_text(text, size, overlap) – falls wir intern schon splitten
+
+Alle Module sollten keine direkten LlamaIndex-Abhängigkeiten außer in adapter.py besitzen, damit Qualität / Sectionizer später ggf. auch von LangChain genutzt werden können.
