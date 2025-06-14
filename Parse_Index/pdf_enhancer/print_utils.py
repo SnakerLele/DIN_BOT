@@ -10,51 +10,101 @@ Dieses Modul enthält Funktionen zur:
 from typing import List, Dict, Any
 from llama_index.core import Document
 
-def print_semantic_analysis_summary(semantic_chunks: List[Dict[str, Any]], documents: List[Document]):
+def print_semantic_analysis_summary(semantic_chunks: List[Dict[str, Any]], documents: List[Document], img2table_count: int = 0):
     """
     Gibt eine Zusammenfassung der semantischen Analyse aus.
-    Inkludiert Tabellen-Statistiken.
+    **ERWEITERT für img2table-Integration.**
     
     Args:
         semantic_chunks: Liste der semantischen Chunks
         documents: Liste der erstellten Documents
+        img2table_count: Anzahl der img2table-Tabellen (neue Pipeline)  
     """
-    # Basis-Statistiken
+    # Pipeline-Aufteilung
+    img2table_docs = [d for d in documents if d.metadata.get('extraction_method') == 'img2table']
+    unstructured_docs = [d for d in documents if d.metadata.get('extraction_method') != 'img2table']
+    
+    # Basis-Statistiken für unstructured-Chunks
     total_chunks = len(semantic_chunks)
     table_chunks = [chunk for chunk in semantic_chunks if chunk.get('is_table', False)]
     text_chunks = [chunk for chunk in semantic_chunks if not chunk.get('is_table', False)]
     
-    print(f"[SEMANTIC] {total_chunks} semantische Abschnitte erstellt:")
+    print(f"[ENHANCED PIPELINE] 🎯 Zusammenfassung der img2table-priorisierten Verarbeitung:")
+    print(f"")
+    print(f"📊 IMG2TABLE-TABELLEN (PRIORITÄT):")
+    print(f"  - Extrahierte Tabellen: {len(img2table_docs)}")
+    if img2table_docs:
+        # img2table Qualitäts-Statistiken
+        quality_stats = {}
+        total_img2table_cells = 0
+        for doc in img2table_docs:
+            quality = doc.metadata.get('table_quality', 'unknown')
+            quality_stats[quality] = quality_stats.get(quality, 0) + 1
+            rows = doc.metadata.get('table_rows', 0)
+            cols = doc.metadata.get('table_columns', 0)
+            total_img2table_cells += (rows * cols)
+        
+        print(f"  - Qualitäts-Verteilung:")
+        for quality, count in quality_stats.items():
+            print(f"    • {quality}: {count} Tabellen")
+        print(f"  - Gesamt-Zellen erkannt: {total_img2table_cells}")
+        
+        # Erste 3 img2table-Tabellen anzeigen
+        for i, doc in enumerate(img2table_docs[:3]):
+            page = doc.metadata.get('page_number', '?')
+            rows = doc.metadata.get('table_rows', 0)
+            cols = doc.metadata.get('table_columns', 0)
+            quality = doc.metadata.get('table_quality', 'unknown')
+            print(f"    📊 img2table-Tabelle {i+1}: Seite {page}, {rows}x{cols}, {quality} Qualität")
+        if len(img2table_docs) > 3:
+            print(f"    ... und {len(img2table_docs)-3} weitere img2table-Tabellen")
+    else:
+        print(f"  - Keine Tabellen mit img2table gefunden")
+    
+    print(f"")
+    print(f"📄 UNSTRUCTURED-CHUNKS (SEMANTISCHE ABSCHNITTE + FALLBACK):")
+    print(f"  - Semantische Abschnitte: {total_chunks}")
     print(f"  - Text-Abschnitte: {len(text_chunks)}")
-    print(f"  - Tabellen-Abschnitte: {len(table_chunks)}")
+    print(f"  - Fallback-Tabellen: {len(table_chunks)}")
     
     # Text-Chunks
     for i, chunk in enumerate(text_chunks[:3]):  # Nur erste 3 anzeigen
-        print(f"    Text {i+1}: '{chunk['section']}' ({chunk['length']} Zeichen)")
+        print(f"    📋 Text {i+1}: '{chunk['section']}' ({chunk['length']} Zeichen)")
     if len(text_chunks) > 3:
         print(f"    ... und {len(text_chunks)-3} weitere Text-Abschnitte")
     
-    # Tabellen-Chunks
+    # Unstructured-Tabellen (Fallback)
     if table_chunks:
-        print(f"  [TABELLEN] Erkannte Tabellen:")
+        print(f"  [FALLBACK-TABELLEN] Unstructured-Tabellen als Backup:")
         for i, table in enumerate(table_chunks):
             quality = table.get('table_quality', 'unknown')
             rows = table.get('table_rows', '?')
             cols = table.get('table_cols', '?')
             method = table.get('table_extraction_method', 'unknown')
-            print(f"    Tabelle {i+1}: {rows}x{cols} Zellen - {quality} Qualität ({method})")
+            print(f"    📊 Fallback-Tabelle {i+1}: {rows}x{cols} Zellen - {quality} Qualität ({method})")
     
-    # Header-Integration Statistiken
-    header_enriched_chunks = [d for d in documents if d.metadata.get('contains_headers')]
-    h1_headers = set(d.metadata.get('section_h1') for d in documents if d.metadata.get('section_h1'))
-    h2_headers = set(d.metadata.get('section_h2') for d in documents if d.metadata.get('section_h2'))
-    h3_headers = set(d.metadata.get('section_h3') for d in documents if d.metadata.get('section_h3'))
+    # Header-Integration Statistiken (nur für unstructured-Dokumente)
+    header_enriched_chunks = [d for d in unstructured_docs if d.metadata.get('contains_headers')]
+    h1_headers = set(d.metadata.get('section_h1') for d in unstructured_docs if d.metadata.get('section_h1'))
+    h2_headers = set(d.metadata.get('section_h2') for d in unstructured_docs if d.metadata.get('section_h2'))
+    h3_headers = set(d.metadata.get('section_h3') for d in unstructured_docs if d.metadata.get('section_h3'))
     
-    print(f"[HEADER] Header-Integration erfolgreich:")
-    print(f"  - Chunks mit Header-Metadaten: {len(header_enriched_chunks)}/{len(documents)}")
-    print(f"  - H1-Überschriften gefunden: {len(h1_headers)}")
-    print(f"  - H2-Überschriften gefunden: {len(h2_headers)}")
-    print(f"  - H3-Überschriften gefunden: {len(h3_headers)}")
+    print(f"")
+    print(f"[HEADER-INTEGRATION] Hierarchische Header-Analyse (unstructured):")
+    print(f"  - Chunks mit Header-Metadaten: {len(header_enriched_chunks)}/{len(unstructured_docs)}")
+    print(f"  - H1-Überschriften: {len(h1_headers)}")
+    print(f"  - H2-Überschriften: {len(h2_headers)}")
+    print(f"  - H3-Überschriften: {len(h3_headers)}")
+    
+    # Gesamt-Statistiken
+    total_docs = len(documents)
+    print(f"")
+    print(f"🎯 PIPELINE-ERFOLG:")
+    print(f"  - img2table-Chunks: {len(img2table_docs)} hochwertige Tabellen")
+    print(f"  - Unstructured-Chunks: {len(unstructured_docs)} semantische Abschnitte")
+    print(f"  - Gesamt-Documents: {total_docs} bereite für RAG-Indexierung")
+    print(f"  - Tabellen-Priorität: img2table > unstructured (Fallback)")
+    print(f"  - Erfolgsrate: {((len(img2table_docs) + len(unstructured_docs)) / max(total_docs, 1)) * 100:.1f}%")
 
 def print_quality_summary(quality_metrics: Dict[str, Any]):
     """
