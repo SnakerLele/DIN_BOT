@@ -11,6 +11,7 @@ import torch
 import traceback
 import warnings
 from typing import List
+import json
 
 from llama_index.core import Document, VectorStoreIndex, StorageContext, Settings
 from llama_index.vector_stores.chroma import ChromaVectorStore
@@ -257,6 +258,67 @@ def process_pdfs_legacy(pdf_files: List[str]) -> List[Document]:
     print(f"   - Tabellen: {total_tables_extracted} img2table Extrakte")
     return documents
 
+def separate_complex_node_metadata(nodes):
+    """
+    Trennt komplexe Node-Metadaten von einfachen für ChromaDB-Kompatibilität.
+    
+    Komplexe Strukturen (Listen, Dicts) werden in extra_info verschoben,
+    während metadata nur primitive Typen (str, int, float, None) behält.
+    """
+    # Definiere welche Keys komplex sind und in extra_info gehören
+    complex_keys = [
+        "doc_items",           # Docling-Strukturdaten
+        "bounding_boxes",      # Layout-Koordinaten  
+        "table_html_content",  # HTML-Tabellen
+    ]
+    
+    processed_nodes = []
+    
+    for node in nodes:
+        # Kopiere Node
+        processed_node = node.copy()
+        
+        # Initialisiere extra_info falls nicht vorhanden
+        if not hasattr(processed_node, 'extra_info') or processed_node.extra_info is None:
+            processed_node.extra_info = {}
+        
+        # Verschiebe komplexe Metadaten zu extra_info
+        for key in complex_keys:
+            if key in processed_node.metadata:
+                value = processed_node.metadata[key]
+                # Nur verschieben wenn es wirklich komplex ist
+                if isinstance(value, (list, dict)):
+                    processed_node.extra_info[key] = value
+                    del processed_node.metadata[key]
+        
+        # Bereinige verbleibende Metadaten für ChromaDB
+        cleaned_metadata = {}
+        for key, value in processed_node.metadata.items():
+            if value is None:
+                cleaned_metadata[key] = None
+            elif isinstance(value, (str, int, float)):
+                cleaned_metadata[key] = value
+            elif isinstance(value, bool):
+                cleaned_metadata[key] = str(value)  # bool -> str für ChromaDB
+            else:
+                # Fallback: zu String konvertieren
+                cleaned_metadata[key] = str(value)
+        
+        processed_node.metadata = cleaned_metadata
+        processed_nodes.append(processed_node)
+    
+    return processed_nodes
+
+def clean_node_metadata_for_chromadb(nodes):
+    """
+    DEPRECATED: Ersetzt durch separate_complex_node_metadata()
+    
+    Diese Methode wird nicht mehr verwendet, da wir jetzt
+    extra_info für komplexe Daten nutzen.
+    """
+    # Diese Methode bleibt für Rückwärtskompatibilität, wird aber nicht mehr aufgerufen
+    return nodes
+
 def create_vector_index(documents, storage_context, parser_system):
     """Erstellt den Vektor-Index."""
     print("4. Erstelle Index...")
@@ -265,6 +327,10 @@ def create_vector_index(documents, storage_context, parser_system):
         # Parse zu Nodes
         nodes = parser_system['main'].get_nodes_from_documents(documents, show_progress=True)
         print(f"✓ {len(nodes)} Nodes erstellt")
+        
+        # WICHTIG: Komplexe Node-Metadaten in extra_info verschieben für ChromaDB
+        nodes = separate_complex_node_metadata(nodes)
+        print(f"✓ Node-Metadaten für ChromaDB optimiert (extra_info-Ansatz)")
         
         # Index erstellen
         index = VectorStoreIndex(nodes, storage_context=storage_context, show_progress=True)

@@ -1,22 +1,63 @@
 """
-LlamaIndex Node Parser für das Parse_Index System
+LlamaIndex Node Parser für das Parse_Index System mit Docling-Integration
 
 Dieses Modul enthält die verschiedenen Node-Parser für die Aufbereitung 
 von Dokumenten in optimale Chunks für das Retrieval-System.
 
 Parser-Strategien:
+- Docling Native: Nutzt DoclingNodeParser für beste Docling-Integration
 - Semantic Section Parser: Semantische Abschnitte als Hauptstrategie
 - Hierarchical Parser: Backup für verschiedene Chunk-Größen  
 - Sentence Window Parser: Satz-basierte Chunks mit Kontext-Fenstern
 """
 
-from typing import Dict, Any
+from typing import Dict, Any, List, Optional
+from llama_index.core import Document
 from llama_index.core.node_parser import (
     SentenceWindowNodeParser, 
     SentenceSplitter, 
-    HierarchicalNodeParser
+    HierarchicalNodeParser,
+    MarkdownNodeParser
 )
+
+# Docling-Integration
+try:
+    from llama_index.node_parser.docling import DoclingNodeParser
+    DOCLING_NODE_PARSER_AVAILABLE = True
+except ImportError:
+    DoclingNodeParser = None
+    DOCLING_NODE_PARSER_AVAILABLE = False
+
 from .config import CHUNK_SIZES_CONFIG
+
+def create_docling_native_parser():
+    """
+    Erstellt einen nativen Docling Node Parser für optimale Docling-Integration.
+    
+    Dies ist die beste Strategie für Docling-verarbeitete PDFs, da sie
+    die reichen Metadaten (Bounding-Boxes, Tabellen-HTML, etc.) optimal nutzt.
+    
+    Returns:
+        DoclingNodeParser: Konfigurierter Docling-Parser oder None falls nicht verfügbar
+    """
+    if not DOCLING_NODE_PARSER_AVAILABLE:
+        return None
+    
+    return DoclingNodeParser()
+
+def create_docling_optimized_markdown_parser():
+    """
+    Erstellt einen für Docling-Markdown optimierten Parser.
+    
+    Für Fälle wo Docling im Markdown-Export-Modus verwendet wird.
+    
+    Returns:
+        MarkdownNodeParser: Konfigurierter Markdown-Parser
+    """
+    return MarkdownNodeParser(
+        include_metadata=True,
+        include_prev_next_rel=True
+    )
 
 def create_semantic_section_parser():
     """
@@ -116,39 +157,50 @@ def create_hybrid_parser_system():
     Erstellt ein hybrides Parser-System mit verschiedenen Strategien.
     
     Das System kombiniert verschiedene Parser-Ansätze für optimale Flexibilität:
-    - Hauptstrategie: Semantische Abschnitte für beste Retrieval-Qualität
-    - Backup: Hierarchische Struktur für verschiedene Anwendungsfälle
-    - Alternativen: Sentence Window und verschiedene Chunk-Größen
+    - Hauptstrategie: Docling Native für beste Docling-Integration
+    - Backup: Semantische Abschnitte für beste Retrieval-Qualität
+    - Alternativen: Hierarchische Struktur und verschiedene Chunk-Größen
     
     Returns:
         dict: Dictionary mit verschiedenen konfigurierten Parsern
     """
-    return {
-        # Hauptstrategie: Semantische Abschnitte
-        'main': create_semantic_section_parser(),
-        
-        # Backup-Strategien für verschiedene Anwendungsfälle
-        'hierarchical': create_hierarchical_backup_parser(),
-        'sentence_window': create_sentence_window_parser(),
-        
-        # Spezielle Parser für verschiedene Anforderungen  
-        'fine_grained': create_fine_grained_splitter(),
-        'context_aware': create_context_aware_splitter(),
-        
-        # Standard-Fallback
-        'fallback': SentenceSplitter(
-            chunk_size=CHUNK_SIZES_CONFIG["chunk_size"],
-            chunk_overlap=CHUNK_SIZES_CONFIG["chunk_overlap"]
-        )
-    }
+    parsers = {}
+    
+    # Hauptstrategie: Docling Native (falls verfügbar)
+    if DOCLING_NODE_PARSER_AVAILABLE:
+        parsers['docling_native'] = create_docling_native_parser()
+        parsers['main'] = parsers['docling_native']  # Alias für Hauptstrategie
+    else:
+        # Fallback: Semantische Abschnitte
+        parsers['main'] = create_semantic_section_parser()
+    
+    # Docling-optimierte Parser
+    parsers['docling_markdown'] = create_docling_optimized_markdown_parser()
+    
+    # Backup-Strategien für verschiedene Anwendungsfälle
+    parsers['semantic'] = create_semantic_section_parser()
+    parsers['hierarchical'] = create_hierarchical_backup_parser()
+    parsers['sentence_window'] = create_sentence_window_parser()
+    
+    # Spezielle Parser für verschiedene Anforderungen  
+    parsers['fine_grained'] = create_fine_grained_splitter()
+    parsers['context_aware'] = create_context_aware_splitter()
+    
+    # Standard-Fallback
+    parsers['fallback'] = SentenceSplitter(
+        chunk_size=CHUNK_SIZES_CONFIG["chunk_size"],
+        chunk_overlap=CHUNK_SIZES_CONFIG["chunk_overlap"]
+    )
+    
+    return parsers
 
 def get_parser_by_strategy(strategy: str):
     """
     Gibt einen spezifischen Parser basierend auf der gewählten Strategie zurück.
     
     Args:
-        strategy: Parser-Strategie ('semantic', 'hierarchical', 'sentence_window', 
-                 'fine_grained', 'context_aware', 'fallback')
+        strategy: Parser-Strategie ('docling_native', 'docling_markdown', 'semantic', 
+                 'hierarchical', 'sentence_window', 'fine_grained', 'context_aware', 'fallback')
                  
     Returns:
         Parser-Objekt entsprechend der gewählten Strategie
@@ -159,7 +211,10 @@ def get_parser_by_strategy(strategy: str):
     parser_system = create_hybrid_parser_system()
     
     strategy_mapping = {
-        'semantic': 'main',
+        'docling_native': 'docling_native',
+        'docling_markdown': 'docling_markdown',
+        'main': 'main',
+        'semantic': 'semantic',
         'hierarchical': 'hierarchical', 
         'sentence_window': 'sentence_window',
         'fine_grained': 'fine_grained',
@@ -172,7 +227,65 @@ def get_parser_by_strategy(strategy: str):
         raise ValueError(f"Unbekannte Parser-Strategie: {strategy}. "
                         f"Verfügbare Strategien: {available_strategies}")
     
-    return parser_system[strategy_mapping[strategy]]
+    parser_key = strategy_mapping[strategy]
+    
+    # Prüfe ob Parser verfügbar ist
+    if parser_key not in parser_system or parser_system[parser_key] is None:
+        if strategy == 'docling_native':
+            raise ValueError(
+                "DoclingNodeParser nicht verfügbar. "
+                "Installiere mit: pip install llama-index-node-parser-docling"
+            )
+        else:
+            # Fallback auf semantischen Parser
+            return parser_system['semantic']
+    
+    return parser_system[parser_key]
+
+def get_optimal_parser_for_documents(documents: List[Document]):
+    """
+    Bestimmt den optimalen Parser basierend auf den Document-Metadaten.
+    
+    Analysiert die Dokumente und wählt den besten Parser:
+    - Docling JSON → DoclingNodeParser
+    - Docling Markdown → MarkdownNodeParser  
+    - Andere → Semantischer Parser
+    
+    Args:
+        documents: Liste von LlamaIndex Documents
+        
+    Returns:
+        Optimaler Parser für die gegebenen Dokumente
+    """
+    if not documents:
+        return get_parser_by_strategy('fallback')
+    
+    # Analysiere erste Document-Metadaten
+    first_doc = documents[0]
+    metadata = first_doc.metadata
+    
+    # Prüfe auf Docling-spezifische Metadaten
+    if 'schema_name' in metadata and 'docling' in metadata.get('schema_name', '').lower():
+        # Docling JSON-Format erkannt
+        if DOCLING_NODE_PARSER_AVAILABLE:
+            return get_parser_by_strategy('docling_native')
+        else:
+            return get_parser_by_strategy('semantic')
+    
+    # Prüfe auf Markdown-Export
+    if metadata.get('export_type') == 'MARKDOWN' or 'markdown' in metadata.get('export_type', '').lower():
+        return get_parser_by_strategy('docling_markdown')
+    
+    # Prüfe auf Tabellen-reiche Dokumente
+    if metadata.get('has_tables') or metadata.get('table_count', 0) > 0:
+        # Für Tabellen ist Docling Native optimal
+        if DOCLING_NODE_PARSER_AVAILABLE:
+            return get_parser_by_strategy('docling_native')
+        else:
+            return get_parser_by_strategy('context_aware')  # Größere Chunks für Tabellen
+    
+    # Standard: Semantischer Parser
+    return get_parser_by_strategy('semantic')
 
 def get_parser_info():
     """
@@ -181,12 +294,26 @@ def get_parser_info():
     Returns:
         dict: Detaillierte Informationen über alle Parser-Strategien
     """
-    return {
+    info = {
+        'docling_native': {
+            'name': 'Docling Native',
+            'description': 'Nutzt DoclingNodeParser für optimale Docling-Integration',
+            'available': DOCLING_NODE_PARSER_AVAILABLE,
+            'use_case': 'Beste Wahl für Docling JSON-Export mit reichen Metadaten',
+            'features': ['Bounding-Boxes', 'Tabellen-HTML', 'Hierarchie-Kontext']
+        },
+        'docling_markdown': {
+            'name': 'Docling Markdown',
+            'description': 'Optimiert für Docling Markdown-Export',
+            'available': True,
+            'use_case': 'Für Docling Markdown-Export mit Überschriften-Struktur'
+        },
         'semantic': {
             'name': 'Semantische Abschnitte',
             'description': 'Behandelt PDF-Abschnitte als ganze Einheiten für beste Retrieval-Qualität',
             'chunk_size': CHUNK_SIZES_CONFIG["chunk_size"],
             'overlap': CHUNK_SIZES_CONFIG["chunk_overlap"],
+            'available': True,
             'use_case': 'Hauptstrategie für strukturierte Dokumente wie Spielregeln'
         },
         'hierarchical': {
@@ -198,12 +325,14 @@ def get_parser_info():
                 CHUNK_SIZES_CONFIG["chunk_size_small"]
             ],
             'overlap': CHUNK_SIZES_CONFIG["chunk_overlap"],
+            'available': True,
             'use_case': 'Backup für komplexe Dokumente mit verschiedenen Strukturebenen'
         },
         'sentence_window': {
             'name': 'Satz-Fenster',
             'description': 'Satz-basierte Chunks mit erweiterten Kontext-Fenstern',
             'window_size': CHUNK_SIZES_CONFIG["window_size"],
+            'available': True,
             'use_case': 'Für präzise, satz-spezifische Abfragen'
         },
         'fine_grained': {
@@ -211,6 +340,7 @@ def get_parser_info():
             'description': 'Kleine Chunks für detaillierte Analyse',
             'chunk_size': CHUNK_SIZES_CONFIG["chunk_size_small"],
             'overlap': CHUNK_SIZES_CONFIG["chunk_overlap"],
+            'available': True,
             'use_case': 'Für sehr spezifische oder detaillierte Informationen'
         },
         'context_aware': {
@@ -218,6 +348,7 @@ def get_parser_info():
             'description': 'Große Chunks mit viel Kontext',
             'chunk_size': CHUNK_SIZES_CONFIG["chunk_size_large"],
             'overlap': int(CHUNK_SIZES_CONFIG["chunk_overlap"] * 1.5),
+            'available': True,
             'use_case': 'Für komplexe Regelwerke oder umfangreiche Dokumentationen'
         },
         'fallback': {
@@ -225,6 +356,46 @@ def get_parser_info():
             'description': 'Standard Sentence Splitter als sicherer Fallback',
             'chunk_size': CHUNK_SIZES_CONFIG["chunk_size"],
             'overlap': CHUNK_SIZES_CONFIG["chunk_overlap"],
+            'available': True,
             'use_case': 'Fallback wenn andere Parser fehlschlagen'
         }
-    } 
+    }
+    
+    return info
+
+def is_docling_node_parser_available() -> bool:
+    """
+    Prüft, ob der DoclingNodeParser verfügbar ist.
+    
+    Returns:
+        bool: True wenn DoclingNodeParser verfügbar ist
+    """
+    return DOCLING_NODE_PARSER_AVAILABLE
+
+# Convenience-Funktionen für einfache Nutzung
+def parse_documents_with_optimal_strategy(documents: List[Document]) -> List:
+    """
+    Parst Dokumente mit der optimalen Strategie basierend auf ihren Metadaten.
+    
+    Args:
+        documents: Liste von LlamaIndex Documents
+        
+    Returns:
+        Liste von Nodes
+    """
+    parser = get_optimal_parser_for_documents(documents)
+    return parser.get_nodes_from_documents(documents)
+
+def parse_documents_with_strategy(documents: List[Document], strategy: str) -> List:
+    """
+    Parst Dokumente mit einer spezifischen Strategie.
+    
+    Args:
+        documents: Liste von LlamaIndex Documents
+        strategy: Parser-Strategie
+        
+    Returns:
+        Liste von Nodes
+    """
+    parser = get_parser_by_strategy(strategy)
+    return parser.get_nodes_from_documents(documents) 
