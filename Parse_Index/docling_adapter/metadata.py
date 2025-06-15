@@ -340,8 +340,8 @@ class MetadataExtractor:
                             element_counts[element_type] = element_counts.get(element_type, 0) + 1
                             total_elements += 1
                 
-                # Strukturierte Element-Counts (nicht als String)
-                metadata['element_counts'] = element_counts
+                # Element-Counts als JSON-String für ChromaDB-Kompatibilität
+                metadata['element_counts'] = json.dumps(element_counts) if element_counts else "{}"
                 metadata['total_elements'] = total_elements
                 
                 # Boolean-Flags für wichtige Element-Typen

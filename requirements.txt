@@ -1,21 +1,39 @@
 # Python-Abhängigkeiten für PDF-Verarbeitung mit Docling und GPU-Support
+
+# === Docling Adapter Dependencies ===
 # Moderne PDF-Verarbeitung mit Docling (ersetzt unstructured)
 docling>=2.36.0
-# Legacy-Support (wird deprecated)
-unstructured[pdf]
+
+# PDF-Metadaten-Extraktion (Fallback für Docling)
+PyPDF2>=3.0.0
+pypdf>=4.0.0
+
+# Sprach-Erkennung für Metadaten
+langdetect>=1.0.9
+
+# File-Locking für Concurrency
+filelock>=3.12.0
+
+# === LlamaIndex & RAG ===
 llama-index
 llama-index-vector-stores-chroma
 llama-index-embeddings-huggingface
 llama-index-readers-file
 chromadb
+
+# === Legacy-Support (wird deprecated) ===
+unstructured[pdf]
+
+# === Core Dependencies ===
 torch
 PyMuPDF
 requests
 psutil
 sentence-transformers
-# GPU-Support-Pakete - nicht nötig, da im PyTorch Image bereits enthalten
-# torch wird vom Basis-Image bereitgestellt
+
+# === GPU-Support ===
 nvidia-ml-py3>=7.352.0
 accelerate>=0.21.0
-# GUI-Abhängigkeiten
+
+# === GUI-Abhängigkeiten ===
 PyQt6>=6.4.0 

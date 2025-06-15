@@ -961,6 +961,177 @@ def _estimate_readability(avg_sentence_length: float, avg_word_length: float) ->
         return "Sehr schwer"
 
 
+# === File-Locking für Concurrency-Sicherheit ===
+
+import contextlib
+import time
+from typing import Generator
+
+try:
+    from filelock import FileLock
+    FILELOCK_AVAILABLE = True
+except ImportError:
+    FILELOCK_AVAILABLE = False
+    logger.warning("filelock nicht verfügbar. Installiere mit: pip install filelock")
+
+
+@contextlib.contextmanager
+def file_lock(
+    file_path: Union[str, Path],
+    timeout: float = 60.0,
+    retry_attempts: int = 3,
+    retry_delay: float = 1.0
+) -> Generator[bool, None, None]:
+    """
+    Context Manager für sicheres File-Locking bei paralleler Verarbeitung.
+    
+    Args:
+        file_path: Pfad zur zu sperrenden Datei
+        timeout: Timeout für Lock-Akquisition in Sekunden
+        retry_attempts: Anzahl Wiederholungsversuche
+        retry_delay: Wartezeit zwischen Versuchen
+        
+    Yields:
+        bool: True wenn Lock erfolgreich akquiriert
+        
+    Example:
+        with file_lock("document.pdf") as locked:
+            if locked:
+                # Sichere Verarbeitung der Datei
+                process_pdf("document.pdf")
+            else:
+                # Lock fehlgeschlagen - überspringen oder Fehler
+                logger.warning("Konnte Datei nicht sperren")
+    """
+    if not FILELOCK_AVAILABLE:
+        # Fallback ohne Locking (nicht sicher, aber funktional)
+        logger.warning("File-Locking nicht verfügbar - Verarbeitung ohne Schutz")
+        yield True
+        return
+    
+    file_path = Path(file_path)
+    lock_file = file_path.with_suffix(f"{file_path.suffix}.lock")
+    
+    lock = FileLock(str(lock_file), timeout=timeout)
+    
+    for attempt in range(retry_attempts):
+        try:
+            with lock:
+                logger.debug(f"File-Lock akquiriert: {file_path.name}")
+                yield True
+                return
+                
+        except Exception as e:
+            logger.warning(f"Lock-Versuch {attempt + 1}/{retry_attempts} fehlgeschlagen: {e}")
+            
+            if attempt < retry_attempts - 1:
+                time.sleep(retry_delay)
+            else:
+                logger.error(f"Konnte File-Lock nicht akquirieren nach {retry_attempts} Versuchen")
+                yield False
+
+
+def create_processing_lock(file_path: Union[str, Path]) -> str:
+    """
+    Erstellt einen eindeutigen Lock-Identifier für eine Datei.
+    
+    Args:
+        file_path: Pfad zur Datei
+        
+    Returns:
+        Eindeutiger Lock-Identifier
+    """
+    file_path = Path(file_path)
+    
+    # Hash aus Pfad und Dateigröße für Eindeutigkeit
+    try:
+        file_stat = file_path.stat()
+        content = f"{file_path.absolute()}_{file_stat.st_size}_{file_stat.st_mtime}"
+    except (OSError, FileNotFoundError):
+        content = str(file_path.absolute())
+    
+    lock_hash = hashlib.md5(content.encode()).hexdigest()[:12]
+    return f"docling_lock_{lock_hash}"
+
+
+def is_file_being_processed(file_path: Union[str, Path]) -> bool:
+    """
+    Prüft, ob eine Datei gerade von einem anderen Prozess verarbeitet wird.
+    
+    Args:
+        file_path: Pfad zur Datei
+        
+    Returns:
+        True wenn Datei gesperrt ist
+    """
+    if not FILELOCK_AVAILABLE:
+        return False
+    
+    file_path = Path(file_path)
+    lock_file = file_path.with_suffix(f"{file_path.suffix}.lock")
+    
+    if not lock_file.exists():
+        return False
+    
+    # Versuche Lock zu akquirieren (non-blocking)
+    lock = FileLock(str(lock_file), timeout=0.1)
+    
+    try:
+        with lock:
+            return False  # Lock erfolgreich -> nicht gesperrt
+    except Exception:
+        return True  # Lock fehlgeschlagen -> gesperrt
+
+
+def cleanup_stale_locks(directory: Union[str, Path], max_age_hours: float = 2.0) -> int:
+    """
+    Entfernt verwaiste Lock-Dateien die älter als max_age_hours sind.
+    
+    Args:
+        directory: Verzeichnis zum Bereinigen
+        max_age_hours: Maximales Alter der Lock-Dateien in Stunden
+        
+    Returns:
+        Anzahl entfernter Lock-Dateien
+    """
+    directory = Path(directory)
+    if not directory.exists():
+        return 0
+    
+    max_age_seconds = max_age_hours * 3600
+    current_time = time.time()
+    removed_count = 0
+    
+    for lock_file in directory.glob("*.lock"):
+        try:
+            file_age = current_time - lock_file.stat().st_mtime
+            
+            if file_age > max_age_seconds:
+                # Versuche Lock zu akquirieren um sicherzustellen dass er nicht aktiv ist
+                if FILELOCK_AVAILABLE:
+                    lock = FileLock(str(lock_file), timeout=0.1)
+                    try:
+                        with lock:
+                            lock_file.unlink()
+                            removed_count += 1
+                            logger.debug(f"Verwaiste Lock-Datei entfernt: {lock_file.name}")
+                    except Exception:
+                        # Lock ist aktiv - nicht entfernen
+                        pass
+                else:
+                    # Ohne filelock - einfach alte Dateien löschen
+                    lock_file.unlink()
+                    removed_count += 1
+                    
+        except Exception as e:
+            logger.warning(f"Fehler beim Bereinigen von {lock_file}: {e}")
+    
+    if removed_count > 0:
+        logger.info(f"{removed_count} verwaiste Lock-Dateien entfernt")
+    
+    return removed_count
+
+
 # Erweiterte Konstanten und Konfiguration
 class Config:
     """Zentrale Konfigurationskonstanten."""
@@ -989,6 +1160,11 @@ class Config:
     # Logging
     DEFAULT_LOG_LEVEL = "INFO"
     LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    
+    # File-Locking
+    DEFAULT_LOCK_TIMEOUT = 60.0
+    DEFAULT_LOCK_RETRY_ATTEMPTS = 3
+    DEFAULT_LOCK_RETRY_DELAY = 1.0
 
 
 # Globale Instanzen
@@ -1011,5 +1187,10 @@ __all__ = [
     "estimate_processing_time",
     "calculate_text_statistics",
     "ProcessingStats",
-    "Config"
+    "Config",
+    # File-Locking
+    "file_lock",
+    "create_processing_lock",
+    "is_file_being_processed",
+    "cleanup_stale_locks",
 ] 

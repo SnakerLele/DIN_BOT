@@ -1,0 +1,61 @@
+{
+  "availability": {
+    "docling_available": true,
+    "config_parameters": 14
+  },
+  "standard": {
+    "pdf_file": "NeurIPS-2020-retrieval-augmented-generation-for-knowledge-intensive-nlp-tasks-Paper.pdf",
+    "config": {
+      "ocr_enabled": true,
+      "table_extraction": true,
+      "image_extraction": true,
+      "formula_extraction": true,
+      "layout_analysis": true,
+      "reading_order": true,
+      "export_format": "markdown",
+      "chunk_by_page": false,
+      "preserve_formatting": true,
+      "extract_metadata": true
+    },
+    "error": "generator didn't stop after throw()",
+    "success": false
+  },
+  "minimal": {
+    "pdf_file": "NeurIPS-2020-retrieval-augmented-generation-for-knowledge-intensive-nlp-tasks-Paper.pdf",
+    "config": {
+      "ocr_enabled": false,
+      "table_extraction": false,
+      "image_extraction": false,
+      "formula_extraction": false,
+      "layout_analysis": true,
+      "reading_order": true,
+      "export_format": "markdown",
+      "chunk_by_page": false,
+      "preserve_formatting": true,
+      "extract_metadata": true
+    },
+    "error": "PDF-Datei nicht gefunden: C:\\Users\\plimp\\OneDrive\\KI\\Projekte\\DIN_BOT\\Test_Skripts\\Sample_PDFs\\NeurIPS-2020-retrieval-augmented-generation-for-knowledge-intensive-nlp-tasks-Paper.pdf",
+    "success": false
+  },
+  "maximum": {
+    "pdf_file": "NeurIPS-2020-retrieval-augmented-generation-for-knowledge-intensive-nlp-tasks-Paper.pdf",
+    "config": {
+      "ocr_enabled": true,
+      "table_extraction": true,
+      "image_extraction": true,
+      "formula_extraction": true,
+      "layout_analysis": true,
+      "reading_order": true,
+      "export_format": "markdown",
+      "chunk_by_page": false,
+      "preserve_formatting": true,
+      "extract_metadata": true,
+      "timeout_seconds": 600,
+      "chunk_strategy": "hybrid",
+      "max_chunk_size": 3000,
+      "chunk_overlap": 300
+    },
+    "error": "PDF-Datei nicht gefunden: C:\\Users\\plimp\\OneDrive\\KI\\Projekte\\DIN_BOT\\Test_Skripts\\Sample_PDFs\\NeurIPS-2020-retrieval-augmented-generation-for-knowledge-intensive-nlp-tasks-Paper.pdf",
+    "success": false
+  }
+}

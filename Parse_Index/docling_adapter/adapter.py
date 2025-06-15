@@ -170,7 +170,8 @@ class DoclingAdapter:
             except Exception as e:
                 self.logger.error(f"Fehler beim Initialisieren von Docling: {e}")
                 self.converter = None
-                DOCLING_AVAILABLE = False
+                # Setze lokale Variable statt globale zu überschreiben
+                self._docling_available = False
         else:
             self.converter = None
             self.logger.warning(
@@ -210,58 +211,72 @@ class DoclingAdapter:
         if not pdf_path.exists():
             raise FileNotFoundError(f"PDF-Datei nicht gefunden: {pdf_path}")
             
-        self.logger.info(f"Verarbeite PDF: {pdf_path.name} ({pdf_path.stat().st_size / 1024 / 1024:.1f} MB)")
+        # File-Locking für Concurrency-Sicherheit
+        from .utils import file_lock
         
-        start_time = time.time()
-        
-        try:
-            # 1. PDF mit Docling parsen (mit Timeout)
-            docling_doc = self._parse_with_docling(pdf_path, strict_mode)
+        with file_lock(
+            pdf_path, 
+            timeout=self.config.get("lock_timeout_seconds", 60),
+            retry_attempts=self.config.get("lock_retry_attempts", 3),
+            retry_delay=self.config.get("lock_retry_delay", 1.0)
+        ) as locked:
             
-            # 2. Semantische Blöcke extrahieren
-            blocks = self.sectionizer.split(docling_doc)
-            self.logger.info(f"Extrahierte {len(blocks)} semantische Blöcke")
+            if not locked:
+                raise RuntimeError(f"Konnte File-Lock für {pdf_path.name} nicht akquirieren. "
+                                 f"Datei wird möglicherweise bereits verarbeitet.")
             
-            # 3. Qualitätsanalyse
-            quality_stats = self.quality_analyzer.analyze(docling_doc)
+            self.logger.info(f"Verarbeite PDF: {pdf_path.name} ({pdf_path.stat().st_size / 1024 / 1024:.1f} MB)")
             
-            # 4. Metadaten extrahieren
-            file_metadata = self.metadata_extractor.extract(docling_doc, pdf_path)
+            start_time = time.time()
             
-            # 5. Statistiken speichern
-            processing_time = time.time() - start_time
-            self._last_stats = {
-                **quality_stats,
-                "pages": len(docling_doc.pages) if hasattr(docling_doc, 'pages') else 0,
-                "blocks": len(blocks),
-                "tables": sum(1 for b in blocks if b["metadata"].get("docling_type") == "table"),
-                "images": sum(1 for b in blocks if b["metadata"].get("docling_type") == "image"),
-                "formulas": sum(1 for b in blocks if b["metadata"].get("docling_type") == "formula"),
-                "processing_time_seconds": round(processing_time, 2),
-                "file_size_mb": round(pdf_path.stat().st_size / 1024 / 1024, 2),
-                "docling_available": DOCLING_AVAILABLE,
-                "docling_version": DOCLING_VERSION,
-            }
+            try:
+                # 1. PDF mit Docling parsen (mit Timeout)
+                docling_doc = self._parse_with_docling(pdf_path, strict_mode)
             
-            # 6. LlamaIndex Documents erstellen
-            llama_docs = self._create_documents(blocks, file_metadata, quality_stats)
-            
-            self.logger.info(
-                f"Erstellt {len(llama_docs)} LlamaIndex Documents "
-                f"in {processing_time:.1f}s"
-            )
-            return llama_docs
-            
-        except TimeoutError:
-            self.logger.error(f"Timeout bei Verarbeitung von {pdf_path.name}")
-            raise
-        except Exception as e:
-            self.logger.error(f"Fehler beim Verarbeiten von {pdf_path.name}: {str(e)}")
-            if strict_mode:
+                # 2. Semantische Blöcke extrahieren
+                blocks = self.sectionizer.split(docling_doc)
+                self.logger.info(f"Extrahierte {len(blocks)} semantische Blöcke")
+                
+                # 3. Qualitätsanalyse
+                quality_stats = self.quality_analyzer.analyze(docling_doc)
+                
+                # 4. Metadaten extrahieren
+                file_metadata = self.metadata_extractor.extract(docling_doc, pdf_path)
+                
+                # 5. Statistiken speichern
+                processing_time = time.time() - start_time
+                self._last_stats = {
+                    **quality_stats,
+                    "pages": len(docling_doc.pages) if hasattr(docling_doc, 'pages') else 0,
+                    "blocks": len(blocks),
+                    "tables": sum(1 for b in blocks if b["metadata"].get("docling_type") == "table"),
+                    "images": sum(1 for b in blocks if b["metadata"].get("docling_type") == "image"),
+                    "formulas": sum(1 for b in blocks if b["metadata"].get("docling_type") == "formula"),
+                    "processing_time_seconds": round(processing_time, 2),
+                    "file_size_mb": round(pdf_path.stat().st_size / 1024 / 1024, 2),
+                    "docling_available": DOCLING_AVAILABLE,
+                    "docling_version": DOCLING_VERSION,
+                }
+                
+                # 6. LlamaIndex Documents erstellen
+                llama_docs = self._create_documents(blocks, file_metadata, quality_stats)
+                
+                self.logger.info(
+                    f"Erstellt {len(llama_docs)} LlamaIndex Documents "
+                    f"in {processing_time:.1f}s"
+                )
+                return llama_docs
+                
+            except TimeoutError:
+                self.logger.error(f"Timeout bei Verarbeitung von {pdf_path.name}")
                 raise
-            else:
-                # Fallback: Minimale Verarbeitung
-                return self._create_fallback_documents(pdf_path, str(e))
+            except Exception as e:
+                self.logger.error(f"Fehler beim Verarbeiten von {pdf_path.name}: {str(e)}")
+                if strict_mode:
+                    raise
+                else:
+                    # Fallback: Minimale Verarbeitung
+                    return self._create_fallback_documents(pdf_path, str(e))
 
     def _parse_with_docling(self, pdf_path: Path, strict_mode: bool = True):
         """
