@@ -1,0 +1,244 @@
+[
+  {
+    "pdf_path": "Test_Skripts\\Sample_PDFs\\DIN 4109 Teil 1.pdf",
+    "filename": "DIN 4109 Teil 1.pdf",
+    "file_exists": true,
+    "file_size_mb": 1.86,
+    "errors": [],
+    "warnings": [],
+    "metadata": {
+      "filename": "DIN 4109 Teil 1.pdf",
+      "file_path": "Test_Skripts\\Sample_PDFs\\DIN 4109 Teil 1.pdf",
+      "file_size_bytes": 1955562,
+      "file_size_mb": 1.86,
+      "title": "4109 Teil 1",
+      "author": null,
+      "subject": null,
+      "year": null,
+      "language": null,
+      "doi": null,
+      "isbn": null,
+      "din_norm": "DIN 4109",
+      "iso_norm": null,
+      "page_count": 30,
+      "creator": "Acrobat PDFMaker 10.1 für Word",
+      "producer": "3-Heights™ PDF Security API 6.27.5.1 (http://www.pdf-tools.com)",
+      "element_counts": {},
+      "has_tables": false,
+      "has_images": false,
+      "has_formulas": false,
+      "extraction_confidence": 0.6,
+      "extraction_timestamp": "2025-06-15T16:03:51.627753",
+      "extraction_sources": [
+        "file_system",
+        "pdf_properties",
+        "docling_analysis",
+        "filename_heuristics"
+      ],
+      "pdf_title": "4109 Teil 1",
+      "heuristic_title": "4109 Teil 1",
+      "pdf_page_count": 30,
+      "docling_page_count": 30,
+      "quality_score": 0.224,
+      "ocr_ratio": 0.0,
+      "has_structure": false,
+      "page_number": 1,
+      "section_title": "",
+      "section_level": 0,
+      "section_index": 0,
+      "chunk_index": 0,
+      "total_chunks": 1,
+      "docling_type": "markdown_section",
+      "chunk_strategy": "by_heading",
+      "text_length": 94,
+      "block_index": 0,
+      "total_blocks": 154,
+      "adapter_version": "1.0.0"
+    },
+    "extraction_stages": {
+      "minimal": {
+        "success": true,
+        "data": {
+          "filename": "DIN 4109 Teil 1.pdf",
+          "file_path": "Test_Skripts\\Sample_PDFs\\DIN 4109 Teil 1.pdf",
+          "file_size_bytes": 1955562,
+          "file_size_mb": 1.86,
+          "file_modified": "2025-06-09T22:41:45",
+          "file_created": "2025-06-15T12:39:07.009812",
+          "file_extension": ".pdf",
+          "title": null,
+          "author": null,
+          "page_count": null
+        },
+        "field_count": 10
+      },
+      "adapter_init": {
+        "success": true,
+        "docling_available": true
+      },
+      "pdf_parsing": {
+        "success": true,
+        "document_count": 154,
+        "documents_created": true
+      },
+      "metadata_analysis": {
+        "total_fields": 42,
+        "field_types": {
+          "str": 13,
+          "int": 12,
+          "float": 4,
+          "NoneType": 7,
+          "dict": 1,
+          "bool": 4,
+          "list": 1
+        },
+        "empty_fields": [
+          "author",
+          "subject",
+          "year",
+          "language",
+          "doi",
+          "isbn",
+          "iso_norm",
+          "section_title"
+        ],
+        "problematic_fields": [],
+        "core_fields": {
+          "title": "4109 Teil 1",
+          "author": null,
+          "filename": "DIN 4109 Teil 1.pdf",
+          "page_count": 30
+        }
+      },
+      "direct_docling": {
+        "success": true,
+        "metadata": {
+          "filename": "DIN 4109 Teil 1.pdf",
+          "file_path": "Test_Skripts\\Sample_PDFs\\DIN 4109 Teil 1.pdf",
+          "file_size_bytes": 1955562,
+          "file_size_mb": 1.86,
+          "title": "4109 Teil 1",
+          "author": null,
+          "subject": null,
+          "year": null,
+          "language": null,
+          "doi": null,
+          "isbn": null,
+          "din_norm": "DIN 4109",
+          "iso_norm": null,
+          "page_count": 30,
+          "creator": "Acrobat PDFMaker 10.1 für Word",
+          "producer": "3-Heights™ PDF Security API 6.27.5.1 (http://www.pdf-tools.com)",
+          "element_counts": {},
+          "has_tables": false,
+          "has_images": false,
+          "has_formulas": false,
+          "extraction_confidence": 0.6,
+          "extraction_timestamp": "2025-06-15T16:04:37.157312",
+          "extraction_sources": [
+            "file_system",
+            "pdf_properties",
+            "docling_analysis",
+            "filename_heuristics"
+          ],
+          "pdf_title": "4109 Teil 1",
+          "heuristic_title": "4109 Teil 1",
+          "pdf_page_count": 30,
+          "docling_page_count": 30
+        },
+        "field_count": 27
+      }
+    },
+    "success": true,
+    "metadata_quality": {
+      "score": 60.0,
+      "max_score": 100.0,
+      "criteria": {
+        "has_title": {
+          "achieved": 20,
+          "max_points": 20,
+          "percentage": 100.0
+        },
+        "has_author": {
+          "achieved": 0,
+          "max_points": 15,
+          "percentage": 0.0
+        },
+        "has_filename": {
+          "achieved": 5,
+          "max_points": 5,
+          "percentage": 100.0
+        },
+        "has_page_count": {
+          "achieved": 10,
+          "max_points": 10,
+          "percentage": 100.0
+        },
+        "has_file_size": {
+          "achieved": 5,
+          "max_points": 5,
+          "percentage": 100.0
+        },
+        "has_extraction_timestamp": {
+          "achieved": 5,
+          "max_points": 5,
+          "percentage": 100.0
+        },
+        "has_element_counts": {
+          "achieved": 0,
+          "max_points": 15,
+          "percentage": 0.0
+        },
+        "has_structure_info": {
+          "achieved": 5.0,
+          "max_points": 10,
+          "percentage": 50.0
+        },
+        "has_language": {
+          "achieved": 0,
+          "max_points": 5,
+          "percentage": 0.0
+        },
+        "has_norms": {
+          "achieved": 10,
+          "max_points": 10,
+          "percentage": 100.0
+        }
+      },
+      "recommendations": [
+        "Autor fehlt - prüfe PDF-Metadaten",
+        "Element-Zählung fehlt - prüfe Docling-Integration"
+      ],
+      "percentage": 60.0,
+      "rating": "Good"
+    },
+    "type_validation": {
+      "total_fields": 42,
+      "valid_fields": 40,
+      "invalid_fields": [
+        {
+          "field": "author",
+          "expected_type": "str",
+          "actual_type": "NoneType",
+          "value": "None"
+        },
+        {
+          "field": "year",
+          "expected_type": "int",
+          "actual_type": "NoneType",
+          "value": "None"
+        }
+      ],
+      "type_distribution": {
+        "str": 13,
+        "int": 12,
+        "float": 4,
+        "NoneType": 7,
+        "dict": 1,
+        "bool": 4,
+        "list": 1
+      },
+      "warnings": []
+    }
+  }
+]

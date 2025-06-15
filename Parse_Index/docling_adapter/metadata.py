@@ -325,7 +325,7 @@ class MetadataExtractor:
                                     metadata[key] = value
                         break
             
-            # Strukturelle Informationen aus Docling-Analyse
+            # Strukturelle Informationen aus Docling-Analyse - erweiterte Extraktion
             if hasattr(docling_doc, 'pages'):
                 metadata['page_count'] = len(docling_doc.pages)
                 
@@ -334,34 +334,79 @@ class MetadataExtractor:
                 total_elements = 0
                 
                 for page in docling_doc.pages:
+                    # Verschiedene Docling-Strukturen testen
+                    elements = []
+                    
+                    # Standard elements Attribut
                     if hasattr(page, 'elements'):
-                        for element in page.elements:
-                            element_type = getattr(element, 'type', 'unknown')
-                            element_counts[element_type] = element_counts.get(element_type, 0) + 1
-                            total_elements += 1
+                        elements.extend(page.elements)
+                    
+                    # Alternative Strukturen
+                    for attr in ['boxes', 'blocks', 'items', 'content']:
+                        if hasattr(page, attr):
+                            page_items = getattr(page, attr)
+                            if page_items:
+                                elements.extend(page_items)
+                    
+                    for element in elements:
+                        # Verschiedene Wege, den Element-Typ zu bestimmen
+                        element_type = 'text'  # Standard
+                        
+                        for type_attr in ['type', 'label', 'category', 'kind', 'element_type']:
+                            if hasattr(element, type_attr):
+                                type_value = getattr(element, type_attr)
+                                if type_value:
+                                    element_type = str(type_value).lower()
+                                    break
+                        
+                        # Fallback: Typ aus Klassenname ableiten
+                        if element_type == 'text' and hasattr(element, '__class__'):
+                            class_name = element.__class__.__name__.lower()
+                            if any(keyword in class_name for keyword in ['table', 'image', 'figure', 'heading', 'title']):
+                                element_type = class_name
+                        
+                        element_counts[element_type] = element_counts.get(element_type, 0) + 1
+                        total_elements += 1
                 
-                # Element-Counts als JSON-String für ChromaDB-Kompatibilität
-                metadata['element_counts'] = json.dumps(element_counts) if element_counts else "{}"
+                # Element-Counts als Dictionary behalten für interne Verarbeitung
+                metadata['element_counts'] = element_counts
                 metadata['total_elements'] = total_elements
                 
-                # Boolean-Flags für wichtige Element-Typen
-                metadata['has_tables'] = element_counts.get('table', 0) > 0
+                # Boolean-Flags für wichtige Element-Typen (erweiterte Erkennung)
+                table_types = ['table', 'tabular', 'tab', 'grid']
+                image_types = ['image', 'figure', 'picture', 'photo', 'img', 'graphic']
+                formula_types = ['formula', 'equation', 'math', 'formula_box']
+                heading_types = ['heading', 'title', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'header']
+                
+                metadata['has_tables'] = any(
+                    any(table_type in element_type for table_type in table_types)
+                    for element_type in element_counts.keys()
+                ) or element_counts.get('table', 0) > 0
+                
                 metadata['has_images'] = any(
-                    element_counts.get(t, 0) > 0 
-                    for t in ['image', 'figure', 'picture']
-                )
+                    any(image_type in element_type for image_type in image_types)
+                    for element_type in element_counts.keys()
+                ) or any(element_counts.get(t, 0) > 0 for t in image_types)
+                
                 metadata['has_formulas'] = any(
-                    element_counts.get(t, 0) > 0 
-                    for t in ['formula', 'equation', 'math']
-                )
+                    any(formula_type in element_type for formula_type in formula_types)
+                    for element_type in element_counts.keys()
+                ) or any(element_counts.get(t, 0) > 0 for t in formula_types)
+                
                 metadata['has_headings'] = any(
-                    element_counts.get(t, 0) > 0 
-                    for t in ['heading', 'title', 'h1', 'h2', 'h3']
-                )
+                    any(heading_type in element_type for heading_type in heading_types)
+                    for element_type in element_counts.keys()
+                ) or any(element_counts.get(t, 0) > 0 for t in heading_types)
                 
                 # Strukturqualität bewerten
                 structure_score = self._calculate_structure_score(element_counts)
                 metadata['structure_score'] = structure_score
+                
+                # Debug-Information über gefundene Element-Typen
+                if element_counts:
+                    self.logger.debug(f"Gefundene Element-Typen: {list(element_counts.keys())}")
+                else:
+                    self.logger.debug("Keine Element-Typen in Docling-Dokument gefunden")
             
             # Layout-Informationen (falls verfügbar)
             if hasattr(docling_doc, 'layout'):
@@ -872,12 +917,38 @@ class MetadataExtractor:
             legacy['pdf_page_count'] = doc_metadata.page_count
             legacy['docling_page_count'] = doc_metadata.page_count
         
-        # Element-Counts als String (für ChromaDB-Kompatibilität)
+        # Element-Counts sichere Behandlung (kann Dictionary oder String sein)
         if doc_metadata.element_counts:
-            legacy['docling_element_counts'] = json.dumps(doc_metadata.element_counts)
-            # Einzelne Counts
-            for element_type, count in doc_metadata.element_counts.items():
-                legacy[f'docling_{element_type}_count'] = count
+            try:
+                # Falls element_counts ein Dictionary ist
+                if isinstance(doc_metadata.element_counts, dict):
+                    element_counts_dict = doc_metadata.element_counts
+                    legacy['docling_element_counts'] = json.dumps(element_counts_dict)
+                    # Einzelne Counts
+                    for element_type, count in element_counts_dict.items():
+                        legacy[f'docling_{element_type}_count'] = count
+                
+                # Falls element_counts ein JSON-String ist
+                elif isinstance(doc_metadata.element_counts, str):
+                    try:
+                        element_counts_dict = json.loads(doc_metadata.element_counts)
+                        legacy['docling_element_counts'] = doc_metadata.element_counts
+                        # Einzelne Counts
+                        for element_type, count in element_counts_dict.items():
+                            legacy[f'docling_{element_type}_count'] = count
+                    except json.JSONDecodeError:
+                        # Fallback: String direkt verwenden
+                        legacy['docling_element_counts'] = doc_metadata.element_counts
+                        self.logger.warning(f"element_counts ist ungültiger JSON: {doc_metadata.element_counts}")
+                
+                else:
+                    # Unerwarteter Typ
+                    self.logger.warning(f"element_counts hat unerwarteten Typ: {type(doc_metadata.element_counts)}")
+                    legacy['docling_element_counts'] = str(doc_metadata.element_counts)
+                    
+            except Exception as e:
+                self.logger.error(f"Fehler bei element_counts Verarbeitung: {e}")
+                legacy['docling_element_counts'] = "{}"
         
         return legacy
 

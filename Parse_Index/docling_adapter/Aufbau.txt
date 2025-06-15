@@ -41,3 +41,8 @@ utils.py
 ‐ chunk_text(text, size, overlap) – falls wir intern schon splitten
 
 Alle Module sollten keine direkten LlamaIndex-Abhängigkeiten außer in adapter.py besitzen, damit Qualität / Sectionizer später ggf. auch von LangChain genutzt werden können.
+
+
+
+-- sectionizer muss noch für die Docling meta daten attributen vorbereitet werden, wie in den Docs. -- 
+
