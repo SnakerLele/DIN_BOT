@@ -23,29 +23,52 @@ from llama_index.core import Document
 # Docling-Import mit mehreren Fallback-Pfaden
 DOCLING_AVAILABLE = False
 DOCLING_VERSION = None
+DOCLING_FEATURES = {
+    "pipeline_options": False,
+    "format_options": False,
+    "chunker": False,
+    "metadata": False
+}
 
 try:
-    # Neuere Docling-Versionen
+    # Neuere Docling-Versionen (v2+)
     from docling.document_converter import DocumentConverter
     DOCLING_AVAILABLE = True
-    DOCLING_VERSION = "new"
+    DOCLING_VERSION = "v2+"
+    
+    # Teste verfügbare Features
+    try:
+        from docling.datamodel.pipeline_options import PdfPipelineOptions
+        from docling.datamodel.base_models import InputFormat
+        from docling.document_converter import PdfFormatOption
+        DOCLING_FEATURES["pipeline_options"] = True
+        DOCLING_FEATURES["format_options"] = True
+    except ImportError:
+        pass
+    
+    try:
+        from docling.chunking import HierarchicalChunker
+        DOCLING_FEATURES["chunker"] = True
+    except ImportError:
+        pass
+        
 except ImportError:
     try:
         # Ältere Docling-Versionen
         from docling.convert import DocumentConverter
         DOCLING_AVAILABLE = True
-        DOCLING_VERSION = "old"
+        DOCLING_VERSION = "v1"
     except ImportError:
         try:
             # Alternative Import-Pfade
             from docling import DocumentConverter
             DOCLING_AVAILABLE = True
-            DOCLING_VERSION = "alt"
+            DOCLING_VERSION = "legacy"
         except ImportError:
             DocumentConverter = None
 
 from .quality import QualityAnalyzer
-from .sectionizer import SectionExtractor
+from .sectionizer import DoclingChunker
 from .metadata import MetadataExtractor
 from .utils import validate_docling_config
 
@@ -156,7 +179,7 @@ class DoclingAdapter:
             raise
         
         # Initialisiere Komponenten
-        self.sectionizer = SectionExtractor(
+        self.chunker = DoclingChunker(
             strategy=self.config.get("chunk_strategy", "hybrid")
         )
         self.quality_analyzer = QualityAnalyzer()
@@ -165,8 +188,9 @@ class DoclingAdapter:
         # Docling Converter mit Konfiguration
         if DOCLING_AVAILABLE:
             try:
-                self.converter = DocumentConverter()
-                self.logger.info(f"Docling verfügbar (Version: {DOCLING_VERSION})")
+                self.converter = self._create_docling_converter()
+                features_info = ", ".join([k for k, v in DOCLING_FEATURES.items() if v])
+                self.logger.info(f"Docling verfügbar (Version: {DOCLING_VERSION}) - Features: {features_info or 'basic'}")
             except Exception as e:
                 self.logger.error(f"Fehler beim Initialisieren von Docling: {e}")
                 self.converter = None
@@ -180,6 +204,102 @@ class DoclingAdapter:
             
         # Statistiken des letzten Parsing-Vorgangs
         self._last_stats: Dict[str, Any] = {}
+
+    def _create_docling_converter(self) -> Any:
+        """
+        Erstellt einen konfigurierten DocumentConverter basierend auf der Config.
+        
+        Reicht Parameter wie OCR, Tabellen-Extraktion etc. an Docling weiter,
+        anstatt sie nur intern zu verwenden.
+        
+        Returns:
+            Konfigurierter DocumentConverter
+        """
+        # Prüfe verfügbare Features und wähle beste Konfigurationsmethode
+        if DOCLING_FEATURES["pipeline_options"] and DOCLING_FEATURES["format_options"]:
+            return self._create_advanced_docling_converter()
+        else:
+            return self._create_basic_docling_converter()
+    
+    def _create_advanced_docling_converter(self) -> Any:
+        """
+        Erstellt DocumentConverter mit erweiterten Pipeline-Optionen.
+        
+        Nutzt die neueste Docling-API für maximale Kontrolle.
+        """
+        try:
+            from docling.datamodel.base_models import InputFormat
+            from docling.datamodel.pipeline_options import PdfPipelineOptions
+            from docling.document_converter import PdfFormatOption
+            
+            # Pipeline-Optionen basierend auf unserer Config erstellen
+            pipeline_options = PdfPipelineOptions()
+            configured_options = []
+            
+            # OCR-Konfiguration
+            if hasattr(pipeline_options, 'do_ocr'):
+                pipeline_options.do_ocr = self.config.get("ocr_enabled", True)
+                configured_options.append(f"OCR: {pipeline_options.do_ocr}")
+            
+            # Tabellen-Extraktion (TableFormer)
+            if hasattr(pipeline_options, 'do_table_structure'):
+                pipeline_options.do_table_structure = self.config.get("table_extraction", True)
+                configured_options.append(f"Tables: {pipeline_options.do_table_structure}")
+            
+            # Layout-Analyse
+            if hasattr(pipeline_options, 'do_layout'):
+                pipeline_options.do_layout = self.config.get("layout_analysis", True)
+                configured_options.append(f"Layout: {pipeline_options.do_layout}")
+            
+            # Bilder-Extraktion
+            if hasattr(pipeline_options, 'images_scale'):
+                if self.config.get("image_extraction", True):
+                    pipeline_options.images_scale = 2.0  # Höhere Auflösung
+                    configured_options.append("Images: enabled (2x scale)")
+                else:
+                    pipeline_options.images_scale = 0.0  # Deaktiviert
+                    configured_options.append("Images: disabled")
+            
+            # Formeln-Extraktion (falls verfügbar)
+            if hasattr(pipeline_options, 'do_formula') and self.config.get("formula_extraction", True):
+                pipeline_options.do_formula = True
+                configured_options.append("Formulas: enabled")
+            
+            # Format-Optionen mit Pipeline konfigurieren
+            format_options = {
+                InputFormat.PDF: PdfFormatOption(pipeline_options=pipeline_options)
+            }
+            
+            converter = DocumentConverter(format_options=format_options)
+            self.logger.info(f"Docling erweitert konfiguriert: {', '.join(configured_options)}")
+            return converter
+            
+        except Exception as e:
+            self.logger.warning(f"Erweiterte Konfiguration fehlgeschlagen: {e}")
+            return self._create_basic_docling_converter()
+    
+    def _create_basic_docling_converter(self) -> Any:
+        """
+        Fallback: Erstellt Standard-DocumentConverter.
+        
+        Für ältere Docling-Versionen oder wenn erweiterte Konfiguration fehlschlägt.
+        """
+        try:
+            # Versuche wenigstens grundlegende Parameter zu setzen
+            converter_kwargs = {}
+            
+            # Manche Docling-Versionen unterstützen diese Parameter direkt
+            if self.config.get("ocr_enabled") is False:
+                converter_kwargs['disable_ocr'] = True
+            
+            converter = DocumentConverter(**converter_kwargs)
+            self.logger.info("Docling mit Standard-Konfiguration erstellt")
+            return converter
+            
+        except Exception as e:
+            self.logger.warning(f"Auch Standard-Konfiguration fehlgeschlagen: {e}")
+            # Letzter Fallback: Komplett ohne Parameter
+            return DocumentConverter()
 
     def parse_pdf(
         self, 
@@ -234,7 +354,7 @@ class DoclingAdapter:
                 docling_doc = self._parse_with_docling(pdf_path, strict_mode)
             
                 # 2. Semantische Blöcke extrahieren
-                blocks = self.sectionizer.split(docling_doc)
+                blocks = self.chunker.split(docling_doc)
                 self.logger.info(f"Extrahierte {len(blocks)} semantische Blöcke")
                 
                 # 3. Qualitätsanalyse
